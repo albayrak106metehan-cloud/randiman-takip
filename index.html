@@ -35,7 +35,7 @@
 
     /* KPI CARDS */
     .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
+    @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
     
     .kpi-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; position: relative; overflow: hidden; }
     .kpi-title { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
@@ -118,11 +118,6 @@
         <div id="kpi-avg" class="kpi-value" style="color: #34d399;">-%</div>
         <div class="kpi-sub">Filtrelenen verilerde</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Toplam Üretim Miktarı</div>
-        <div id="kpi-total-prod" class="kpi-value" style="color: #fbbf24;">0</div>
-        <div class="kpi-sub">Adet / Bobin</div>
-      </div>
     </div>
 
     <!-- MAIN GRAPH & FILTER SECTION -->
@@ -142,10 +137,8 @@
           <input type="date" id="filter-end-date" class="form-control" onchange="applyFilters()">
         </div>
         <div class="form-group">
-          <label>Operatör / Usta</label>
-          <select id="filter-operator" class="form-control" onchange="applyFilters()">
-            <option value="ALL">Tüm Operatörler</option>
-          </select>
+          <label>Operatör / Usta Ara</label>
+          <input type="text" id="filter-operator" class="form-control" placeholder="İsim yazın..." oninput="applyFilters()">
         </div>
         <div class="form-group">
           <label>Makine</label>
@@ -172,12 +165,12 @@
         <table>
           <thead>
             <tr>
-              <th>Tarih / Saat</th>
+              <th>Tarih</th>
               <th>Vardiya</th>
               <th>Makine</th>
               <th>Operatör</th>
-              <th>Üretim (H/G)</th>
               <th>Randıman</th>
+              <th>Açıklama</th>
               <th>İşlem</th>
             </tr>
           </thead>
@@ -205,13 +198,19 @@
       </div>
       <form onsubmit="saveRecord(event)" class="modal-body">
         
-        <div class="form-group">
-          <label>Vardiya Seçimi</label>
-          <select id="form-shift" class="form-control" required>
-            <option value="Gündüz Vardiyası">Gündüz Vardiyası (08:00 - 16:00)</option>
-            <option value="Akşam Vardiyası">Akşam Vardiyası (16:00 - 24:00)</option>
-            <option value="Gece Vardiyası">Gece Vardiyası (00:00 - 08:00)</option>
-          </select>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Tarih</label>
+            <input type="date" id="form-date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Vardiya Seçimi</label>
+            <select id="form-shift" class="form-control" required>
+              <option value="Gündüz Vardiyası">Gündüz Vardiyası (08:00 - 16:00)</option>
+              <option value="Akşam Vardiyası">Akşam Vardiyası (16:00 - 24:00)</option>
+              <option value="Gece Vardiyası">Gece Vardiyası (00:00 - 08:00)</option>
+            </select>
+          </div>
         </div>
 
         <div class="grid-2">
@@ -220,256 +219,12 @@
             <select id="form-machine" class="form-control" required></select>
           </div>
           <div class="form-group">
-            <label>Operatör / Usta</label>
-            <select id="form-operator" class="form-control" required></select>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Hedef Üretim (Adet)</label>
-            <input type="number" id="form-target" class="form-control" placeholder="Örn: 1000" required>
-          </div>
-          <div class="form-group">
-            <label>Gerçekleşen Üretim</label>
-            <input type="number" id="form-actual" class="form-control" placeholder="Örn: 880" required>
+            <label>Operatör Adı Soyadı</label>
+            <input type="text" id="form-operator" class="form-control" placeholder="Ad Soyad giriniz..." required>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Fire / Miktar (İsteğe Bağlı)</label>
-          <input type="number" id="form-scrap" class="form-control" placeholder="Örn: 12">
+          <label>Randıman Yüzdesi (%)</label>
+          <input type="number" id="form-efficiency" class="form-control" min="0" max="100" placeholder="Örn: 85" required>
         </div>
-
-        <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 10px; padding: 12px;">Kaydet ve Hesapla</button>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    // System Default States
-    const machines = Array.from({length: 16}, (_, i) => `Fitil ${i + 1}`);
-    const operators = ['Ahmet Usta', 'Mehmet Usta', 'Mustafa Usta', 'Ali Usta', 'Hasan Usta'];
-
-    let records = JSON.parse(localStorage.getItem('fitil_records')) || [];
-
-    // Initialize UI
-    window.onload = function() {
-      if (window.innerWidth >= 768) {
-        document.getElementById('desktop-add-btn').style.display = 'inline-flex';
-      }
-      populateDropdowns();
-      renderDashboard();
-    };
-
-    function populateDropdowns() {
-      const formMachine = document.getElementById('form-machine');
-      const filterMachine = document.getElementById('filter-machine');
-      formMachine.innerHTML = machines.map(m => `<option value="${m}">${m}</option>`).join('');
-      filterMachine.innerHTML = '<option value="ALL">Tüm Fitil Makineleri</option>' + machines.map(m => `<option value="${m}">${m}</option>`).join('');
-
-      const formOp = document.getElementById('form-operator');
-      const filterOp = document.getElementById('filter-operator');
-      formOp.innerHTML = operators.map(o => `<option value="${o}">${o}</option>`).join('');
-      filterOp.innerHTML = '<option value="ALL">Tüm Operatörler</option>' + operators.map(o => `<option value="${o}">${o}</option>`).join('');
-    }
-
-    function openModal() { document.getElementById('entry-modal').classList.add('open'); }
-    function closeModal() { document.getElementById('entry-modal').classList.remove('open'); }
-
-    function saveRecord(e) {
-      e.preventDefault();
-      const target = Number(document.getElementById('form-target').value);
-      const actual = Number(document.getElementById('form-actual').value);
-      const eff = Math.round((actual / target) * 100);
-
-      const newRecord = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        dateStr: new Date().toLocaleDateString('tr-TR'),
-        timeStr: new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}),
-        shift: document.getElementById('form-shift').value,
-        machine: document.getElementById('form-machine').value,
-        operator: document.getElementById('form-operator').value,
-        target: target,
-        actual: actual,
-        efficiency: eff,
-        scrap: Number(document.getElementById('form-scrap').value) || 0
-      };
-
-      records.unshift(newRecord);
-      localStorage.setItem('fitil_records', JSON.stringify(records));
-      closeModal();
-      renderDashboard();
-    }
-
-    function deleteRecord(id) {
-      records = records.filter(r => r.id !== id);
-      localStorage.setItem('fitil_records', JSON.stringify(records));
-      renderDashboard();
-    }
-
-    function applyFilters() {
-      renderDashboard();
-    }
-
-    function getFilteredRecords() {
-      const startDate = document.getElementById('filter-start-date').value;
-      const endDate = document.getElementById('filter-end-date').value;
-      const operator = document.getElementById('filter-operator').value;
-      const machine = document.getElementById('filter-machine').value;
-
-      return records.filter(r => {
-        const rDate = r.timestamp.split('T')[0];
-        if (startDate && rDate < startDate) return false;
-        if (endDate && rDate > endDate) return false;
-        if (operator !== 'ALL' && r.operator !== operator) return false;
-        if (machine !== 'ALL' && r.machine !== machine) return false;
-        return true;
-      });
-    }
-
-    function renderDashboard() {
-      const filtered = getFilteredRecords();
-      
-      // Calculate KPI Values
-      // 1. Son 24 Saat Ortalaması
-      const now = Date.now();
-      const last24hRecords = records.filter(r => (now - r.id) <= (24 * 60 * 60 * 1000));
-      const avg24h = last24hRecords.length 
-        ? Math.round(last24hRecords.reduce((a,b) => a + b.efficiency, 0) / last24hRecords.length) 
-        : 0;
-
-      // 2. Önceki Vardiya Randımanı (En son girilen ilk kayıt)
-      const prevShift = records.length ? records[0] : null;
-
-      // 3. Filtreli Verilerin Ortalaması ve Toplamı
-      const avgEff = filtered.length ? Math.round(filtered.reduce((a,b) => a + b.efficiency, 0) / filtered.length) : 0;
-      const totalProd = filtered.reduce((a,b) => a + b.actual, 0);
-
-      // DOM Updates
-      document.getElementById('kpi-24h').innerText = last24hRecords.length ? `%${avg24h}` : '-%';
-      
-      if (prevShift) {
-        document.getElementById('kpi-prev-shift').innerText = `%${prevShift.efficiency}`;
-        document.getElementById('kpi-prev-shift-info').innerText = `${prevShift.machine} - ${prevShift.shift.split(' ')[0]}`;
-      } else {
-        document.getElementById('kpi-prev-shift').innerText = '-%';
-      }
-
-      document.getElementById('kpi-avg').innerText = filtered.length ? `%${avgEff}` : '-%';
-      document.getElementById('kpi-total-prod').innerText = totalProd.toLocaleString('tr-TR');
-
-      // Table Render
-      const tbody = document.getElementById('table-body');
-      if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 20px;">Kayıtlı veri bulunamadı.</td></tr>`;
-      } else {
-        tbody.innerHTML = filtered.map(r => {
-          let badgeClass = r.efficiency >= 90 ? 'badge-success' : (r.efficiency >= 80 ? 'badge-warning' : 'badge-danger');
-          return `
-            <tr>
-              <td><b>${r.dateStr}</b> <span style="font-size:11px; color:var(--text-muted);">${r.timeStr}</span></td>
-              <td>${r.shift}</td>
-              <td><b>${r.machine}</b></td>
-              <td>${r.operator}</td>
-              <td>${r.target} / <b>${r.actual}</b></td>
-              <td><span class="badge ${badgeClass}">%${r.efficiency}</span></td>
-              <td><button onclick="deleteRecord(${r.id})" class="btn btn-danger" style="padding: 4px 8px; font-size:10px;">Sil</button></td>
-            </tr>
-          `;
-        }).join('');
-      }
-
-      // Render Canvas Graph
-      drawCanvasChart(filtered);
-    }
-
-    function drawCanvasChart(data) {
-      const canvas = document.getElementById('mainChart');
-      const ctx = canvas.getContext('2d');
-
-      // DPR scale for sharp rendering
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-
-      ctx.clearRect(0, 0, rect.width, rect.height);
-
-      if (!data.length) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '13px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Grafik için veri bekleniyor...', rect.width / 2, rect.height / 2);
-        return;
-      }
-
-      const chartData = [...data].reverse().slice(-12); // Last 12 records
-      const padding = 30;
-      const graphWidth = rect.width - (padding * 2);
-      const graphHeight = rect.height - (padding * 2);
-
-      // Draw Grid
-      ctx.strokeStyle = '#334155';
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i <= 4; i++) {
-        const y = padding + (graphHeight / 4) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(rect.width - padding, y);
-        ctx.stroke();
-
-        ctx.fillStyle = '#64748b';
-        ctx.font = '10px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(`${100 - (i * 25)}%`, padding - 5, y + 3);
-      }
-
-      // Draw Line
-      const points = chartData.map((d, index) => {
-        const x = padding + (graphWidth / (chartData.length - 1 || 1)) * index;
-        const y = padding + graphHeight - ((d.efficiency / 100) * graphHeight);
-        return { x, y, eff: d.efficiency, label: d.machine };
-      });
-
-      ctx.beginPath();
-      ctx.strokeStyle = '#6366f1';
-      ctx.lineWidth = 3;
-      points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.stroke();
-
-      // Draw Points & Tooltips
-      points.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fill();
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`%${p.eff}`, p.x, p.y - 10);
-      });
-    }
-
-    function loadDemoData() {
-      const demo = [
-        { id: Date.now() - 3600000, timestamp: new Date().toISOString(), dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '14:30', shift: 'Gündüz Vardiyası', machine: 'Fitil 1', operator: 'Ahmet Usta', target: 1000, actual: 920, efficiency: 92, scrap: 5 },
-        { id: Date.now() - 7200000, timestamp: new Date().toISOString(), dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '12:00', shift: 'Gündüz Vardiyası', machine: 'Fitil 2', operator: 'Mehmet Usta', target: 1000, actual: 840, efficiency: 84, scrap: 10 },
-        { id: Date.now() - 86400000, timestamp: new Date(Date.now() - 86400000).toISOString(), dateStr: 'Dün', timeStr: '22:00', shift: 'Akşam Vardiyası', machine: 'Fitil 5', operator: 'Ali Usta', target: 1000, actual: 780, efficiency: 78, scrap: 15 }
-      ];
-      records = demo;
-      localStorage.setItem('fitil_records', JSON.stringify(records));
-      renderDashboard();
-    }
-  </script>
-</body>
-</html>
