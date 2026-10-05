@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Fitil Makineleri Randıman Takip Paneli</title>
+  <title>Fitil Makineleri Takip Paneli</title>
   <style>
     :root {
       --bg-dark: #0f172a;
@@ -19,71 +19,75 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding-bottom: 80px; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding-bottom: 70px; }
 
+    /* HEADER */
     header { background-color: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--card-border); padding: 12px 16px; position: sticky; top: 0; z-index: 30; }
-    .header-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-    .logo-area { display: flex; align-items: center; gap: 12px; }
-    .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 18px; }
+    .header-container { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 18px; }
 
-    .btn { background-color: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-    .btn:hover { background-color: var(--primary-hover); }
-    .btn-secondary { background-color: #334155; color: var(--text-main); }
-    .btn-danger { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+    /* NAV BUTTONS */
+    .nav-tabs { display: flex; gap: 8px; }
+    .tab-btn { background-color: #334155; color: var(--text-muted); border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background-color: var(--primary); color: white; }
 
-    main { max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+    main { max-width: 1000px; margin: 0 auto; padding: 16px; }
 
-    /* KPI CARDS */
-    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+    .page { display: none; flex-direction: column; gap: 16px; }
+    .page.active { display: flex; }
+
+    /* CARDS & FORM */
+    .section-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; }
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
     
-    .kpi-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; position: relative; overflow: hidden; }
-    .kpi-title { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
-    .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); }
-    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 600px) { .form-grid { grid-template-columns: repeat(2, 1fr); } }
 
-    /* FILTERS & GRAPHIC SECTION */
-    .section-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; }
-    .section-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    
-    .filter-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-bottom: 16px; background-color: #0f172a; padding: 12px; border-radius: 10px; border: 1px solid #1e293b; }
-    @media (min-width: 768px) { .filter-grid { grid-template-columns: repeat(4, 1fr); } }
-
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    .form-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
-    .form-control { background-color: var(--card-bg); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; width: 100%; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .form-control { background-color: #0f172a; border: 1px solid var(--card-border); color: white; padding: 10px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
     .form-control:focus { border-color: var(--primary); }
 
-    .canvas-container { width: 100%; height: 260px; position: relative; }
+    .btn { background-color: var(--primary); color: white; border: none; padding: 12px 18px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; width: 100%; }
+    .btn:hover { background-color: var(--primary-hover); }
+    .btn-secondary { background-color: #334155; color: var(--text-main); width: auto; padding: 6px 12px; font-size: 12px; }
+    .btn-danger { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; font-size: 11px; border-radius: 6px; cursor: pointer; }
+
+    /* KPI CARDS */
+    .kpi-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 12px; }
+    @media (min-width: 600px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+    .kpi-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; }
+    .kpi-title { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .kpi-value { font-size: 22px; font-weight: 800; margin-top: 4px; }
+
+    /* CANVAS GRAPH */
+    .canvas-container { width: 100%; height: 260px; position: relative; margin-top: 10px; }
     canvas { width: 100% !important; height: 100% !important; }
 
     /* TABLE */
-    .table-container { overflow-x: auto; margin-top: 10px; }
+    .table-container { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
     th { background-color: #0f172a; color: var(--text-muted); font-weight: 600; padding: 10px; border-bottom: 1px solid var(--card-border); }
     td { padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-main); }
-    
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
     .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
     .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
     .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
     /* BOTTOM NAV FOR MOBILE */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: rgba(15, 23, 42, 0.98); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; padding: 8px; z-index: 40; }
-    @media (min-width: 768px) { .bottom-nav { display: none; } }
-    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; }
-    .nav-item.active { color: var(--primary); font-weight: bold; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: rgba(15, 23, 42, 0.98); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; padding: 10px; z-index: 40; }
+    @media (min-width: 600px) { .bottom-nav { display: none; } }
+    .mobile-nav-btn { background: none; border: none; color: var(--text-muted); font-size: 12px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+    .mobile-nav-btn.active { color: var(--primary); }
 
-    /* MODAL */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
-    .modal-backdrop.open { display: flex; }
-    .modal-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; width: 100%; max-width: 480px; overflow: hidden; }
-    .modal-header { padding: 16px; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-    .modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    /* ALERT TOAST */
+    #alert-toast { position: fixed; top: 20px; right: 20px; background-color: var(--success); color: white; padding: 12px 20px; border-radius: 10px; font-weight: bold; display: none; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
   </style>
 </head>
 <body>
+
+  <div id="alert-toast">Kayıt Başarıyla Eklendi!</div>
 
   <!-- HEADER -->
   <header>
@@ -91,170 +95,184 @@
       <div class="logo-area">
         <div class="logo-icon">F</div>
         <div>
-          <div style="font-weight: 800; font-size: 16px;">Fitil Randıman Paneli</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Fitil Makineleri Performans Takibi</div>
+          <div style="font-weight: 800; font-size: 15px;">Fitil Randıman Takip</div>
         </div>
       </div>
-      <button onclick="openModal()" class="btn" style="display: none;" id="desktop-add-btn">+ Veri Gir</button>
+      <!-- Masaüstü Navigasyon -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchPage('entry')">✍️ Veri Girişi</button>
+        <button class="tab-btn" onclick="switchPage('analytics')">📈 Grafikler & Raporlar</button>
+      </div>
     </div>
   </header>
 
   <main>
 
-    <!-- KPI CARDS -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-title">Son 24 Saat Ortalaması</div>
-        <div id="kpi-24h" class="kpi-value" style="color: #38bdf8;">-%</div>
-        <div class="kpi-sub">Günlük ortalama randıman</div>
+    <!-- SAYFA 1: SADE VERİ GİRİŞ SAYFASI -->
+    <div id="page-entry" class="page active">
+      <div class="section-card">
+        <div class="section-title">
+          <span>📝 Vardiya Veri Giriş Formu</span>
+        </div>
+        <form onsubmit="saveRecord(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Tarih</label>
+              <input type="date" id="form-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Vardiya Seçimi</label>
+              <select id="form-shift" class="form-control" required>
+                <option value="Gündüz Vardiyası">Gündüz Vardiyası (08:00 - 16:00)</option>
+                <option value="Akşam Vardiyası">Akşam Vardiyası (16:00 - 24:00)</option>
+                <option value="Gece Vardiyası">Gece Vardiyası (00:00 - 08:00)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Makine</label>
+              <select id="form-machine" class="form-control" required></select>
+            </div>
+            <div class="form-group">
+              <label>Operatör / Usta Adı Soyadı</label>
+              <input type="text" id="form-operator" class="form-control" placeholder="Ad Soyad giriniz..." required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 12px;">
+            <label>Randıman Yüzdesi (%)</label>
+            <input type="number" id="form-efficiency" class="form-control" min="0" max="100" placeholder="Örn: 85" required style="font-size: 16px; font-weight: bold; color: #38bdf8;">
+          </div>
+
+          <div class="form-group" style="margin-top: 12px;">
+            <label>Açıklama / Duruş Notları (İsteğe Bağlı)</label>
+            <textarea id="form-description" class="form-control" rows="2" placeholder="Arıza, duruş veya vardiya detayları..."></textarea>
+          </div>
+
+          <button type="submit" class="btn" style="margin-top: 16px;">💾 Kaydı Tamamla ve Gönder</button>
+        </form>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Önceki Vardiya Randımanı</div>
-        <div id="kpi-prev-shift" class="kpi-value" style="color: #a78bfa;">-%</div>
-        <div id="kpi-prev-shift-info" class="kpi-sub">Son girilen vardiya</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Genel Ortalama Randıman</div>
-        <div id="kpi-avg" class="kpi-value" style="color: #34d399;">-%</div>
-        <div class="kpi-sub">Filtrelenen verilerde</div>
+
+      <!-- Son Girilen Kayıtlar Ekranı -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>📋 Son Girilen Vardiya Kayıtları</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Vardiya</th>
+                <th>Makine</th>
+                <th>Operatör</th>
+                <th>Randıman</th>
+                <th>Açıklama</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="entry-table-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- MAIN GRAPH & FILTER SECTION -->
-    <div class="section-card">
-      <div class="section-title">
-        <span>📈 Randıman Grafiği ve Detaylı Filtreleme</span>
-      </div>
-
-      <!-- FILTERS -->
-      <div class="filter-grid">
-        <div class="form-group">
-          <label>Başlangıç Tarihi</label>
-          <input type="date" id="filter-start-date" class="form-control" onchange="applyFilters()">
+    <!-- SAYFA 2: GRAFİKLER VE ANALİZ SAYFASI -->
+    <div id="page-analytics" class="page">
+      
+      <!-- KPI ÖZET KARTLARI -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Son 24 Saat Ortalaması</div>
+          <div id="kpi-24h" class="kpi-value" style="color: #38bdf8;">-%</div>
         </div>
-        <div class="form-group">
-          <label>Bitiş Tarihi</label>
-          <input type="date" id="filter-end-date" class="form-control" onchange="applyFilters()">
+        <div class="kpi-card">
+          <div class="kpi-title">Önceki Vardiya Randımanı</div>
+          <div id="kpi-prev-shift" class="kpi-value" style="color: #a78bfa;">-%</div>
         </div>
-        <div class="form-group">
-          <label>Operatör / Usta Ara</label>
-          <input type="text" id="filter-operator" class="form-control" placeholder="İsim yazın..." oninput="applyFilters()">
-        </div>
-        <div class="form-group">
-          <label>Makine</label>
-          <select id="filter-machine" class="form-control" onchange="applyFilters()">
-            <option value="ALL">Tüm Fitil Makineleri</option>
-          </select>
+        <div class="kpi-card">
+          <div class="kpi-title">Filtrelenen Genel Ortalama</div>
+          <div id="kpi-avg" class="kpi-value" style="color: #34d399;">-%</div>
         </div>
       </div>
 
-      <!-- CANVAS GRAPH -->
-      <div class="canvas-container">
-        <canvas id="mainChart"></canvas>
-      </div>
-    </div>
+      <!-- FILTERS & GRAPH -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>📈 Randıman Grafiği ve Filtreleme</span>
+          <button onclick="loadDemoData()" class="btn btn-secondary">+ Örnek Veri Yükle</button>
+        </div>
 
-    <!-- RECORD TABLE -->
-    <div class="section-card">
-      <div class="section-title">
-        <span>📋 Vardiya Kayıt Geçmişi</span>
-        <button onclick="loadDemoData()" class="btn btn-secondary" style="font-size: 11px; padding: 6px 10px;">+ Örnek Veri Yükle</button>
-      </div>
-
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Tarih</th>
-              <th>Vardiya</th>
-              <th>Makine</th>
-              <th>Operatör</th>
-              <th>Randıman</th>
-              <th>Açıklama</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody id="table-body">
-            <!-- Dynamic JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- BOTTOM NAVIGATION (MOBILE) -->
-  <div class="bottom-nav">
-    <button class="nav-item active">📊 Panel</button>
-    <button onclick="openModal()" class="btn" style="border-radius: 50px; padding: 8px 16px;">+ Veri Gir</button>
-  </div>
-
-  <!-- MODAL FORM -->
-  <div id="entry-modal" class="modal-backdrop">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span>Vardiya Veri Girişi</span>
-        <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
-      </div>
-      <form onsubmit="saveRecord(event)" class="modal-body">
-        
-        <div class="grid-2">
+        <div class="form-grid" style="background-color: #0f172a; padding: 12px; border-radius: 10px; margin-bottom: 12px;">
           <div class="form-group">
-            <label>Tarih</label>
-            <input type="date" id="form-date" class="form-control" required>
+            <label>Başlangıç Tarihi</label>
+            <input type="date" id="filter-start-date" class="form-control" onchange="renderAnalytics()">
           </div>
           <div class="form-group">
-            <label>Vardiya Seçimi</label>
-            <select id="form-shift" class="form-control" required>
-              <option value="Gündüz Vardiyası">Gündüz Vardiyası (08:00 - 16:00)</option>
-              <option value="Akşam Vardiyası">Akşam Vardiyası (16:00 - 24:00)</option>
-              <option value="Gece Vardiyası">Gece Vardiyası (00:00 - 08:00)</option>
+            <label>Bitiş Tarihi</label>
+            <input type="date" id="filter-end-date" class="form-control" onchange="renderAnalytics()">
+          </div>
+          <div class="form-group">
+            <label>Operatör Ara</label>
+            <input type="text" id="filter-operator" class="form-control" placeholder="İsim..." oninput="renderAnalytics()">
+          </div>
+          <div class="form-group">
+            <label>Makine</label>
+            <select id="filter-machine" class="form-control" onchange="renderAnalytics()">
+              <option value="ALL">Tüm Fitil Makineleri</option>
             </select>
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Makine</label>
-            <select id="form-machine" class="form-control" required></select>
-          </div>
-          <div class="form-group">
-            <label>Operatör Adı Soyadı</label>
-            <input type="text" id="form-operator" class="form-control" placeholder="Ad Soyad giriniz..." required>
-          </div>
+        <div class="canvas-container">
+          <canvas id="mainChart"></canvas>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label>Randıman Yüzdesi (%)</label>
-          <input type="number" id="form-efficiency" class="form-control" min="0" max="100" placeholder="Örn: 85" required>
+      <!-- DETAYLI TABLO -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>📊 Filtrelenmiş Tüm Kayıtlar</span>
         </div>
-
-        <div class="form-group">
-          <label>Açıklama / Notlar (İsteğe Bağlı)</label>
-          <textarea id="form-description" class="form-control" rows="3" placeholder="Arıza, duruş veya vardiya detaylarını yazabilirsiniz..."></textarea>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Vardiya</th>
+                <th>Makine</th>
+                <th>Operatör</th>
+                <th>Randıman</th>
+                <th>Açıklama</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-table-body"></tbody>
+          </table>
         </div>
+      </div>
 
-        <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 10px; padding: 12px;">Kaydet</button>
-      </form>
     </div>
+
+  </main>
+
+  <!-- MOBİL ALT MENÜ -->
+  <div class="bottom-nav">
+    <button class="mobile-nav-btn active" id="m-btn-entry" onclick="switchPage('entry')">
+      <span style="font-size: 16px;">✍️</span> Veri Girişi
+    </button>
+    <button class="mobile-nav-btn" id="m-btn-analytics" onclick="switchPage('analytics')">
+      <span style="font-size: 16px;">📈</span> Grafikler & Ortalamalar
+    </button>
   </div>
 
   <script>
-    // System Default States
     const machines = Array.from({length: 16}, (_, i) => `Fitil ${i + 1}`);
-
     let records = JSON.parse(localStorage.getItem('fitil_records')) || [];
 
-    // Initialize UI
     window.onload = function() {
-      if (window.innerWidth >= 768) {
-        document.getElementById('desktop-add-btn').style.display = 'inline-flex';
-      }
-      // Bugüne ait varsayılan tarih ayarla
       document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
-      
       populateDropdowns();
-      renderDashboard();
+      renderEntryTable();
     };
 
     function populateDropdowns() {
@@ -264,11 +282,23 @@
       filterMachine.innerHTML = '<option value="ALL">Tüm Fitil Makineleri</option>' + machines.map(m => `<option value="${m}">${m}</option>`).join('');
     }
 
-    function openModal() { 
-      document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('entry-modal').classList.add('open'); 
+    function switchPage(pageName) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+
+      if(pageName === 'entry') {
+        document.getElementById('page-entry').classList.add('active');
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('m-btn-entry').classList.add('active');
+        renderEntryTable();
+      } else {
+        document.getElementById('page-analytics').classList.add('active');
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('m-btn-analytics').classList.add('active');
+        renderAnalytics();
+      }
     }
-    function closeModal() { document.getElementById('entry-modal').classList.remove('open'); }
 
     function saveRecord(e) {
       e.preventDefault();
@@ -280,7 +310,6 @@
         id: Date.now(),
         dateRaw: selectedDate,
         dateStr: formattedDate,
-        timeStr: new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}),
         shift: document.getElementById('form-shift').value,
         machine: document.getElementById('form-machine').value,
         operator: document.getElementById('form-operator').value.trim(),
@@ -290,24 +319,77 @@
 
       records.unshift(newRecord);
       localStorage.setItem('fitil_records', JSON.stringify(records));
-      
-      // Formu temizle ve kapat
+
       document.getElementById('form-operator').value = '';
       document.getElementById('form-efficiency').value = '';
       document.getElementById('form-description').value = '';
-      
-      closeModal();
-      renderDashboard();
+
+      showToast();
+      renderEntryTable();
+    }
+
+    function showToast() {
+      const toast = document.getElementById('alert-toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
     }
 
     function deleteRecord(id) {
       records = records.filter(r => r.id !== id);
       localStorage.setItem('fitil_records', JSON.stringify(records));
-      renderDashboard();
+      if(document.getElementById('page-entry').classList.contains('active')) {
+        renderEntryTable();
+      } else {
+        renderAnalytics();
+      }
     }
 
-    function applyFilters() {
-      renderDashboard();
+    function renderEntryTable() {
+      const tbody = document.getElementById('entry-table-body');
+      const recent = records.slice(0, 10);
+      if (!recent.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 15px;">Henüz hiç kayıt girilmedi.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = recent.map(r => generateRowHTML(r)).join('');
+    }
+
+    function renderAnalytics() {
+      const filtered = getFilteredRecords();
+      
+      const now = Date.now();
+      const last24h = records.filter(r => (now - r.id) <= (24 * 60 * 60 * 1000));
+      const avg24h = last24h.length ? Math.round(last24h.reduce((a,b) => a + b.efficiency, 0) / last24h.length) : 0;
+      const prevShift = records.length ? records[0] : null;
+      const avgEff = filtered.length ? Math.round(filtered.reduce((a,b) => a + b.efficiency, 0) / filtered.length) : 0;
+
+      document.getElementById('kpi-24h').innerText = last24h.length ? `%${avg24h}` : '-%';
+      document.getElementById('kpi-prev-shift').innerText = prevShift ? `%${prevShift.efficiency}` : '-%';
+      document.getElementById('kpi-avg').innerText = filtered.length ? `%${avgEff}` : '-%';
+
+      const tbody = document.getElementById('analytics-table-body');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 15px;">Filtrenize uygun veri bulunamadı.</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(r => generateRowHTML(r)).join('');
+      }
+
+      drawCanvasChart(filtered);
+    }
+
+    function generateRowHTML(r) {
+      let badgeClass = r.efficiency >= 90 ? 'badge-success' : (r.efficiency >= 80 ? 'badge-warning' : 'badge-danger');
+      return `
+        <tr>
+          <td><b>${r.dateStr}</b></td>
+          <td>${r.shift.split(' ')[0]}</td>
+          <td><b>${r.machine}</b></td>
+          <td>${r.operator}</td>
+          <td><span class="badge ${badgeClass}">%${r.efficiency}</span></td>
+          <td style="font-size:12px; color: var(--text-muted);">${r.description || '-'}</td>
+          <td><button onclick="deleteRecord(${r.id})" class="btn-danger">Sil</button></td>
+        </tr>
+      `;
     }
 
     function getFilteredRecords() {
@@ -317,79 +399,22 @@
       const machine = document.getElementById('filter-machine').value;
 
       return records.filter(r => {
-        const rDate = r.dateRaw || r.timestamp?.split('T')[0];
-        if (startDate && rDate < startDate) return false;
-        if (endDate && rDate > endDate) return false;
+        if (startDate && r.dateRaw < startDate) return false;
+        if (endDate && r.dateRaw > endDate) return false;
         if (operatorQuery && !r.operator.toLowerCase().includes(operatorQuery)) return false;
         if (machine !== 'ALL' && r.machine !== machine) return false;
         return true;
       });
     }
 
-    function renderDashboard() {
-      const filtered = getFilteredRecords();
-      
-      // Calculate KPI Values
-      // 1. Son 24 Saat Ortalaması
-      const now = Date.now();
-      const last24hRecords = records.filter(r => (now - r.id) <= (24 * 60 * 60 * 1000));
-      const avg24h = last24hRecords.length 
-        ? Math.round(last24hRecords.reduce((a,b) => a + b.efficiency, 0) / last24hRecords.length) 
-        : 0;
-
-      // 2. Önceki Vardiya Randımanı (En son girilen ilk kayıt)
-      const prevShift = records.length ? records[0] : null;
-
-      // 3. Filtreli Verilerin Ortalaması
-      const avgEff = filtered.length ? Math.round(filtered.reduce((a,b) => a + b.efficiency, 0) / filtered.length) : 0;
-
-      // DOM Updates
-      document.getElementById('kpi-24h').innerText = last24hRecords.length ? `%${avg24h}` : '-%';
-      
-      if (prevShift) {
-        document.getElementById('kpi-prev-shift').innerText = `%${prevShift.efficiency}`;
-        document.getElementById('kpi-prev-shift-info').innerText = `${prevShift.machine} - ${prevShift.shift.split(' ')[0]}`;
-      } else {
-        document.getElementById('kpi-prev-shift').innerText = '-%';
-      }
-
-      document.getElementById('kpi-avg').innerText = filtered.length ? `%${avgEff}` : '-%';
-
-      // Table Render
-      const tbody = document.getElementById('table-body');
-      if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 20px;">Kayıtlı veri bulunamadı.</td></tr>`;
-      } else {
-        tbody.innerHTML = filtered.map(r => {
-          let badgeClass = r.efficiency >= 90 ? 'badge-success' : (r.efficiency >= 80 ? 'badge-warning' : 'badge-danger');
-          return `
-            <tr>
-              <td><b>${r.dateStr}</b></td>
-              <td>${r.shift}</td>
-              <td><b>${r.machine}</b></td>
-              <td>${r.operator}</td>
-              <td><span class="badge ${badgeClass}">%${r.efficiency}</span></td>
-              <td style="max-width: 200px; font-size:12px; color: var(--text-muted);">${r.description || '-'}</td>
-              <td><button onclick="deleteRecord(${r.id})" class="btn btn-danger" style="padding: 4px 8px; font-size:10px;">Sil</button></td>
-            </tr>
-          `;
-        }).join('');
-      }
-
-      // Render Canvas Graph
-      drawCanvasChart(filtered);
-    }
-
     function drawCanvasChart(data) {
       const canvas = document.getElementById('mainChart');
       const ctx = canvas.getContext('2d');
-
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
-
       ctx.clearRect(0, 0, rect.width, rect.height);
 
       if (!data.length) {
@@ -423,7 +448,7 @@
       const points = chartData.map((d, index) => {
         const x = padding + (graphWidth / (chartData.length - 1 || 1)) * index;
         const y = padding + graphHeight - ((d.efficiency / 100) * graphHeight);
-        return { x, y, eff: d.efficiency, label: d.machine };
+        return { x, y, eff: d.efficiency };
       });
 
       ctx.beginPath();
@@ -453,14 +478,13 @@
 
     function loadDemoData() {
       const today = new Date().toISOString().split('T')[0];
-      const demo = [
-        { id: Date.now() - 3600000, dateRaw: today, dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '14:30', shift: 'Gündüz Vardiyası', machine: 'Fitil 1', operator: 'Ahmet Yılmaz', efficiency: 92, description: 'Normal çalışma, sorunsuz geçti.' },
-        { id: Date.now() - 7200000, dateRaw: today, dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '12:00', shift: 'Gündüz Vardiyası', machine: 'Fitil 2', operator: 'Mehmet Demir', efficiency: 84, description: '15 dk kayış değişimi yapıldı.' },
-        { id: Date.now() - 86400000, dateRaw: new Date(Date.now() - 86400000).toISOString().split('T')[0], dateStr: 'Dün', timeStr: '22:00', shift: 'Akşam Vardiyası', machine: 'Fitil 5', operator: 'Ali Kaya', efficiency: 78, description: 'Elektrik kesintisi yaşandı.' }
+      records = [
+        { id: Date.now() - 3600000, dateRaw: today, dateStr: new Date().toLocaleDateString('tr-TR'), shift: 'Gündüz Vardiyası', machine: 'Fitil 1', operator: 'Ahmet Yılmaz', efficiency: 92, description: 'Normal çalışma' },
+        { id: Date.now() - 7200000, dateRaw: today, dateStr: new Date().toLocaleDateString('tr-TR'), shift: 'Gündüz Vardiyası', machine: 'Fitil 2', operator: 'Mehmet Demir', efficiency: 84, description: 'Kayış değişimi yapıldı' },
+        { id: Date.now() - 86400000, dateRaw: new Date(Date.now() - 86400000).toISOString().split('T')[0], dateStr: 'Dün', shift: 'Akşam Vardiyası', machine: 'Fitil 5', operator: 'Ali Kaya', efficiency: 78, description: 'Elektrik kesintisi' }
       ];
-      records = demo;
       localStorage.setItem('fitil_records', JSON.stringify(records));
-      renderDashboard();
+      renderAnalytics();
     }
   </script>
 </body>
