@@ -228,3 +228,240 @@
           <label>Randıman Yüzdesi (%)</label>
           <input type="number" id="form-efficiency" class="form-control" min="0" max="100" placeholder="Örn: 85" required>
         </div>
+
+        <div class="form-group">
+          <label>Açıklama / Notlar (İsteğe Bağlı)</label>
+          <textarea id="form-description" class="form-control" rows="3" placeholder="Arıza, duruş veya vardiya detaylarını yazabilirsiniz..."></textarea>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 10px; padding: 12px;">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // System Default States
+    const machines = Array.from({length: 16}, (_, i) => `Fitil ${i + 1}`);
+
+    let records = JSON.parse(localStorage.getItem('fitil_records')) || [];
+
+    // Initialize UI
+    window.onload = function() {
+      if (window.innerWidth >= 768) {
+        document.getElementById('desktop-add-btn').style.display = 'inline-flex';
+      }
+      // Bugüne ait varsayılan tarih ayarla
+      document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+      
+      populateDropdowns();
+      renderDashboard();
+    };
+
+    function populateDropdowns() {
+      const formMachine = document.getElementById('form-machine');
+      const filterMachine = document.getElementById('filter-machine');
+      formMachine.innerHTML = machines.map(m => `<option value="${m}">${m}</option>`).join('');
+      filterMachine.innerHTML = '<option value="ALL">Tüm Fitil Makineleri</option>' + machines.map(m => `<option value="${m}">${m}</option>`).join('');
+    }
+
+    function openModal() { 
+      document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('entry-modal').classList.add('open'); 
+    }
+    function closeModal() { document.getElementById('entry-modal').classList.remove('open'); }
+
+    function saveRecord(e) {
+      e.preventDefault();
+      const selectedDate = document.getElementById('form-date').value;
+      const [year, month, day] = selectedDate.split('-');
+      const formattedDate = `${day}.${month}.${year}`;
+
+      const newRecord = {
+        id: Date.now(),
+        dateRaw: selectedDate,
+        dateStr: formattedDate,
+        timeStr: new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}),
+        shift: document.getElementById('form-shift').value,
+        machine: document.getElementById('form-machine').value,
+        operator: document.getElementById('form-operator').value.trim(),
+        efficiency: Number(document.getElementById('form-efficiency').value),
+        description: document.getElementById('form-description').value.trim()
+      };
+
+      records.unshift(newRecord);
+      localStorage.setItem('fitil_records', JSON.stringify(records));
+      
+      // Formu temizle ve kapat
+      document.getElementById('form-operator').value = '';
+      document.getElementById('form-efficiency').value = '';
+      document.getElementById('form-description').value = '';
+      
+      closeModal();
+      renderDashboard();
+    }
+
+    function deleteRecord(id) {
+      records = records.filter(r => r.id !== id);
+      localStorage.setItem('fitil_records', JSON.stringify(records));
+      renderDashboard();
+    }
+
+    function applyFilters() {
+      renderDashboard();
+    }
+
+    function getFilteredRecords() {
+      const startDate = document.getElementById('filter-start-date').value;
+      const endDate = document.getElementById('filter-end-date').value;
+      const operatorQuery = document.getElementById('filter-operator').value.toLowerCase().trim();
+      const machine = document.getElementById('filter-machine').value;
+
+      return records.filter(r => {
+        const rDate = r.dateRaw || r.timestamp?.split('T')[0];
+        if (startDate && rDate < startDate) return false;
+        if (endDate && rDate > endDate) return false;
+        if (operatorQuery && !r.operator.toLowerCase().includes(operatorQuery)) return false;
+        if (machine !== 'ALL' && r.machine !== machine) return false;
+        return true;
+      });
+    }
+
+    function renderDashboard() {
+      const filtered = getFilteredRecords();
+      
+      // Calculate KPI Values
+      // 1. Son 24 Saat Ortalaması
+      const now = Date.now();
+      const last24hRecords = records.filter(r => (now - r.id) <= (24 * 60 * 60 * 1000));
+      const avg24h = last24hRecords.length 
+        ? Math.round(last24hRecords.reduce((a,b) => a + b.efficiency, 0) / last24hRecords.length) 
+        : 0;
+
+      // 2. Önceki Vardiya Randımanı (En son girilen ilk kayıt)
+      const prevShift = records.length ? records[0] : null;
+
+      // 3. Filtreli Verilerin Ortalaması
+      const avgEff = filtered.length ? Math.round(filtered.reduce((a,b) => a + b.efficiency, 0) / filtered.length) : 0;
+
+      // DOM Updates
+      document.getElementById('kpi-24h').innerText = last24hRecords.length ? `%${avg24h}` : '-%';
+      
+      if (prevShift) {
+        document.getElementById('kpi-prev-shift').innerText = `%${prevShift.efficiency}`;
+        document.getElementById('kpi-prev-shift-info').innerText = `${prevShift.machine} - ${prevShift.shift.split(' ')[0]}`;
+      } else {
+        document.getElementById('kpi-prev-shift').innerText = '-%';
+      }
+
+      document.getElementById('kpi-avg').innerText = filtered.length ? `%${avgEff}` : '-%';
+
+      // Table Render
+      const tbody = document.getElementById('table-body');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 20px;">Kayıtlı veri bulunamadı.</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(r => {
+          let badgeClass = r.efficiency >= 90 ? 'badge-success' : (r.efficiency >= 80 ? 'badge-warning' : 'badge-danger');
+          return `
+            <tr>
+              <td><b>${r.dateStr}</b></td>
+              <td>${r.shift}</td>
+              <td><b>${r.machine}</b></td>
+              <td>${r.operator}</td>
+              <td><span class="badge ${badgeClass}">%${r.efficiency}</span></td>
+              <td style="max-width: 200px; font-size:12px; color: var(--text-muted);">${r.description || '-'}</td>
+              <td><button onclick="deleteRecord(${r.id})" class="btn btn-danger" style="padding: 4px 8px; font-size:10px;">Sil</button></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render Canvas Graph
+      drawCanvasChart(filtered);
+    }
+
+    function drawCanvasChart(data) {
+      const canvas = document.getElementById('mainChart');
+      const ctx = canvas.getContext('2d');
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      if (!data.length) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Grafik için veri bekleniyor...', rect.width / 2, rect.height / 2);
+        return;
+      }
+
+      const chartData = [...data].reverse().slice(-12);
+      const padding = 30;
+      const graphWidth = rect.width - (padding * 2);
+      const graphHeight = rect.height - (padding * 2);
+
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= 4; i++) {
+        const y = padding + (graphHeight / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(rect.width - padding, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${100 - (i * 25)}%`, padding - 5, y + 3);
+      }
+
+      const points = chartData.map((d, index) => {
+        const x = padding + (graphWidth / (chartData.length - 1 || 1)) * index;
+        const y = padding + graphHeight - ((d.efficiency / 100) * graphHeight);
+        return { x, y, eff: d.efficiency, label: d.machine };
+      });
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 3;
+      points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+
+      points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`%${p.eff}`, p.x, p.y - 10);
+      });
+    }
+
+    function loadDemoData() {
+      const today = new Date().toISOString().split('T')[0];
+      const demo = [
+        { id: Date.now() - 3600000, dateRaw: today, dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '14:30', shift: 'Gündüz Vardiyası', machine: 'Fitil 1', operator: 'Ahmet Yılmaz', efficiency: 92, description: 'Normal çalışma, sorunsuz geçti.' },
+        { id: Date.now() - 7200000, dateRaw: today, dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '12:00', shift: 'Gündüz Vardiyası', machine: 'Fitil 2', operator: 'Mehmet Demir', efficiency: 84, description: '15 dk kayış değişimi yapıldı.' },
+        { id: Date.now() - 86400000, dateRaw: new Date(Date.now() - 86400000).toISOString().split('T')[0], dateStr: 'Dün', timeStr: '22:00', shift: 'Akşam Vardiyası', machine: 'Fitil 5', operator: 'Ali Kaya', efficiency: 78, description: 'Elektrik kesintisi yaşandı.' }
+      ];
+      records = demo;
+      localStorage.setItem('fitil_records', JSON.stringify(records));
+      renderDashboard();
+    }
+  </script>
+</body>
+</html>
