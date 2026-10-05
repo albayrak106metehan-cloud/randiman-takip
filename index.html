@@ -1,1 +1,475 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fitil Makineleri Randıman Takip Paneli</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding-bottom: 80px; }
+
+    header { background-color: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--card-border); padding: 12px 16px; position: sticky; top: 0; z-index: 30; }
+    .header-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 18px; }
+
+    .btn { background-color: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .btn:hover { background-color: var(--primary-hover); }
+    .btn-secondary { background-color: #334155; color: var(--text-main); }
+    .btn-danger { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    main { max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* KPI CARDS */
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
+    
+    .kpi-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; position: relative; overflow: hidden; }
+    .kpi-title { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+    .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* FILTERS & GRAPHIC SECTION */
+    .section-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; }
+    .section-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    
+    .filter-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-bottom: 16px; background-color: #0f172a; padding: 12px; border-radius: 10px; border: 1px solid #1e293b; }
+    @media (min-width: 768px) { .filter-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .form-control { background-color: var(--card-bg); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; width: 100%; }
+    .form-control:focus { border-color: var(--primary); }
+
+    .canvas-container { width: 100%; height: 260px; position: relative; }
+    canvas { width: 100% !important; height: 100% !important; }
+
+    /* TABLE */
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th { background-color: #0f172a; color: var(--text-muted); font-weight: 600; padding: 10px; border-bottom: 1px solid var(--card-border); }
+    td { padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-main); }
+    
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+    /* BOTTOM NAV FOR MOBILE */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: rgba(15, 23, 42, 0.98); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; padding: 8px; z-index: 40; }
+    @media (min-width: 768px) { .bottom-nav { display: none; } }
+    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; }
+    .nav-item.active { color: var(--primary); font-weight: bold; }
+
+    /* MODAL */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+    .modal-backdrop.open { display: flex; }
+    .modal-card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; width: 100%; max-width: 480px; overflow: hidden; }
+    .modal-header { padding: 16px; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon">F</div>
+        <div>
+          <div style="font-weight: 800; font-size: 16px;">Fitil Randıman Paneli</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Fitil Makineleri Performans Takibi</div>
+        </div>
+      </div>
+      <button onclick="openModal()" class="btn" style="display: none;" id="desktop-add-btn">+ Veri Gir</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Son 24 Saat Ortalaması</div>
+        <div id="kpi-24h" class="kpi-value" style="color: #38bdf8;">-%</div>
+        <div class="kpi-sub">Günlük ortalama randıman</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Önceki Vardiya Randımanı</div>
+        <div id="kpi-prev-shift" class="kpi-value" style="color: #a78bfa;">-%</div>
+        <div id="kpi-prev-shift-info" class="kpi-sub">Son girilen vardiya</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Genel Ortalama Randıman</div>
+        <div id="kpi-avg" class="kpi-value" style="color: #34d399;">-%</div>
+        <div class="kpi-sub">Filtrelenen verilerde</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Toplam Üretim Miktarı</div>
+        <div id="kpi-total-prod" class="kpi-value" style="color: #fbbf24;">0</div>
+        <div class="kpi-sub">Adet / Bobin</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRAPH & FILTER SECTION -->
+    <div class="section-card">
+      <div class="section-title">
+        <span>📈 Randıman Grafiği ve Detaylı Filtreleme</span>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Başlangıç Tarihi</label>
+          <input type="date" id="filter-start-date" class="form-control" onchange="applyFilters()">
+        </div>
+        <div class="form-group">
+          <label>Bitiş Tarihi</label>
+          <input type="date" id="filter-end-date" class="form-control" onchange="applyFilters()">
+        </div>
+        <div class="form-group">
+          <label>Operatör / Usta</label>
+          <select id="filter-operator" class="form-control" onchange="applyFilters()">
+            <option value="ALL">Tüm Operatörler</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Makine</label>
+          <select id="filter-machine" class="form-control" onchange="applyFilters()">
+            <option value="ALL">Tüm Fitil Makineleri</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- CANVAS GRAPH -->
+      <div class="canvas-container">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+
+    <!-- RECORD TABLE -->
+    <div class="section-card">
+      <div class="section-title">
+        <span>📋 Vardiya Kayıt Geçmişi</span>
+        <button onclick="loadDemoData()" class="btn btn-secondary" style="font-size: 11px; padding: 6px 10px;">+ Örnek Veri Yükle</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Tarih / Saat</th>
+              <th>Vardiya</th>
+              <th>Makine</th>
+              <th>Operatör</th>
+              <th>Üretim (H/G)</th>
+              <th>Randıman</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Dynamic JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION (MOBILE) -->
+  <div class="bottom-nav">
+    <button class="nav-item active">📊 Panel</button>
+    <button onclick="openModal()" class="btn" style="border-radius: 50px; padding: 8px 16px;">+ Veri Gir</button>
+  </div>
+
+  <!-- MODAL FORM -->
+  <div id="entry-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>Vardiya Veri Girişi</span>
+        <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <form onsubmit="saveRecord(event)" class="modal-body">
+        
+        <div class="form-group">
+          <label>Vardiya Seçimi</label>
+          <select id="form-shift" class="form-control" required>
+            <option value="Gündüz Vardiyası">Gündüz Vardiyası (08:00 - 16:00)</option>
+            <option value="Akşam Vardiyası">Akşam Vardiyası (16:00 - 24:00)</option>
+            <option value="Gece Vardiyası">Gece Vardiyası (00:00 - 08:00)</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Makine</label>
+            <select id="form-machine" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label>Operatör / Usta</label>
+            <select id="form-operator" class="form-control" required></select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Hedef Üretim (Adet)</label>
+            <input type="number" id="form-target" class="form-control" placeholder="Örn: 1000" required>
+          </div>
+          <div class="form-group">
+            <label>Gerçekleşen Üretim</label>
+            <input type="number" id="form-actual" class="form-control" placeholder="Örn: 880" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Fire / Miktar (İsteğe Bağlı)</label>
+          <input type="number" id="form-scrap" class="form-control" placeholder="Örn: 12">
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 10px; padding: 12px;">Kaydet ve Hesapla</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // System Default States
+    const machines = Array.from({length: 16}, (_, i) => `Fitil ${i + 1}`);
+    const operators = ['Ahmet Usta', 'Mehmet Usta', 'Mustafa Usta', 'Ali Usta', 'Hasan Usta'];
+
+    let records = JSON.parse(localStorage.getItem('fitil_records')) || [];
+
+    // Initialize UI
+    window.onload = function() {
+      if (window.innerWidth >= 768) {
+        document.getElementById('desktop-add-btn').style.display = 'inline-flex';
+      }
+      populateDropdowns();
+      renderDashboard();
+    };
+
+    function populateDropdowns() {
+      const formMachine = document.getElementById('form-machine');
+      const filterMachine = document.getElementById('filter-machine');
+      formMachine.innerHTML = machines.map(m => `<option value="${m}">${m}</option>`).join('');
+      filterMachine.innerHTML = '<option value="ALL">Tüm Fitil Makineleri</option>' + machines.map(m => `<option value="${m}">${m}</option>`).join('');
+
+      const formOp = document.getElementById('form-operator');
+      const filterOp = document.getElementById('filter-operator');
+      formOp.innerHTML = operators.map(o => `<option value="${o}">${o}</option>`).join('');
+      filterOp.innerHTML = '<option value="ALL">Tüm Operatörler</option>' + operators.map(o => `<option value="${o}">${o}</option>`).join('');
+    }
+
+    function openModal() { document.getElementById('entry-modal').classList.add('open'); }
+    function closeModal() { document.getElementById('entry-modal').classList.remove('open'); }
+
+    function saveRecord(e) {
+      e.preventDefault();
+      const target = Number(document.getElementById('form-target').value);
+      const actual = Number(document.getElementById('form-actual').value);
+      const eff = Math.round((actual / target) * 100);
+
+      const newRecord = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        dateStr: new Date().toLocaleDateString('tr-TR'),
+        timeStr: new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}),
+        shift: document.getElementById('form-shift').value,
+        machine: document.getElementById('form-machine').value,
+        operator: document.getElementById('form-operator').value,
+        target: target,
+        actual: actual,
+        efficiency: eff,
+        scrap: Number(document.getElementById('form-scrap').value) || 0
+      };
+
+      records.unshift(newRecord);
+      localStorage.setItem('fitil_records', JSON.stringify(records));
+      closeModal();
+      renderDashboard();
+    }
+
+    function deleteRecord(id) {
+      records = records.filter(r => r.id !== id);
+      localStorage.setItem('fitil_records', JSON.stringify(records));
+      renderDashboard();
+    }
+
+    function applyFilters() {
+      renderDashboard();
+    }
+
+    function getFilteredRecords() {
+      const startDate = document.getElementById('filter-start-date').value;
+      const endDate = document.getElementById('filter-end-date').value;
+      const operator = document.getElementById('filter-operator').value;
+      const machine = document.getElementById('filter-machine').value;
+
+      return records.filter(r => {
+        const rDate = r.timestamp.split('T')[0];
+        if (startDate && rDate < startDate) return false;
+        if (endDate && rDate > endDate) return false;
+        if (operator !== 'ALL' && r.operator !== operator) return false;
+        if (machine !== 'ALL' && r.machine !== machine) return false;
+        return true;
+      });
+    }
+
+    function renderDashboard() {
+      const filtered = getFilteredRecords();
+      
+      // Calculate KPI Values
+      // 1. Son 24 Saat Ortalaması
+      const now = Date.now();
+      const last24hRecords = records.filter(r => (now - r.id) <= (24 * 60 * 60 * 1000));
+      const avg24h = last24hRecords.length 
+        ? Math.round(last24hRecords.reduce((a,b) => a + b.efficiency, 0) / last24hRecords.length) 
+        : 0;
+
+      // 2. Önceki Vardiya Randımanı (En son girilen ilk kayıt)
+      const prevShift = records.length ? records[0] : null;
+
+      // 3. Filtreli Verilerin Ortalaması ve Toplamı
+      const avgEff = filtered.length ? Math.round(filtered.reduce((a,b) => a + b.efficiency, 0) / filtered.length) : 0;
+      const totalProd = filtered.reduce((a,b) => a + b.actual, 0);
+
+      // DOM Updates
+      document.getElementById('kpi-24h').innerText = last24hRecords.length ? `%${avg24h}` : '-%';
+      
+      if (prevShift) {
+        document.getElementById('kpi-prev-shift').innerText = `%${prevShift.efficiency}`;
+        document.getElementById('kpi-prev-shift-info').innerText = `${prevShift.machine} - ${prevShift.shift.split(' ')[0]}`;
+      } else {
+        document.getElementById('kpi-prev-shift').innerText = '-%';
+      }
+
+      document.getElementById('kpi-avg').innerText = filtered.length ? `%${avgEff}` : '-%';
+      document.getElementById('kpi-total-prod').innerText = totalProd.toLocaleString('tr-TR');
+
+      // Table Render
+      const tbody = document.getElementById('table-body');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 20px;">Kayıtlı veri bulunamadı.</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(r => {
+          let badgeClass = r.efficiency >= 90 ? 'badge-success' : (r.efficiency >= 80 ? 'badge-warning' : 'badge-danger');
+          return `
+            <tr>
+              <td><b>${r.dateStr}</b> <span style="font-size:11px; color:var(--text-muted);">${r.timeStr}</span></td>
+              <td>${r.shift}</td>
+              <td><b>${r.machine}</b></td>
+              <td>${r.operator}</td>
+              <td>${r.target} / <b>${r.actual}</b></td>
+              <td><span class="badge ${badgeClass}">%${r.efficiency}</span></td>
+              <td><button onclick="deleteRecord(${r.id})" class="btn btn-danger" style="padding: 4px 8px; font-size:10px;">Sil</button></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render Canvas Graph
+      drawCanvasChart(filtered);
+    }
+
+    function drawCanvasChart(data) {
+      const canvas = document.getElementById('mainChart');
+      const ctx = canvas.getContext('2d');
+
+      // DPR scale for sharp rendering
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      if (!data.length) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Grafik için veri bekleniyor...', rect.width / 2, rect.height / 2);
+        return;
+      }
+
+      const chartData = [...data].reverse().slice(-12); // Last 12 records
+      const padding = 30;
+      const graphWidth = rect.width - (padding * 2);
+      const graphHeight = rect.height - (padding * 2);
+
+      // Draw Grid
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= 4; i++) {
+        const y = padding + (graphHeight / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(rect.width - padding, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${100 - (i * 25)}%`, padding - 5, y + 3);
+      }
+
+      // Draw Line
+      const points = chartData.map((d, index) => {
+        const x = padding + (graphWidth / (chartData.length - 1 || 1)) * index;
+        const y = padding + graphHeight - ((d.efficiency / 100) * graphHeight);
+        return { x, y, eff: d.efficiency, label: d.machine };
+      });
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 3;
+      points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+
+      // Draw Points & Tooltips
+      points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`%${p.eff}`, p.x, p.y - 10);
+      });
+    }
+
+    function loadDemoData() {
+      const demo = [
+        { id: Date.now() - 3600000, timestamp: new Date().toISOString(), dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '14:30', shift: 'Gündüz Vardiyası', machine: 'Fitil 1', operator: 'Ahmet Usta', target: 1000, actual: 920, efficiency: 92, scrap: 5 },
+        { id: Date.now() - 7200000, timestamp: new Date().toISOString(), dateStr: new Date().toLocaleDateString('tr-TR'), timeStr: '12:00', shift: 'Gündüz Vardiyası', machine: 'Fitil 2', operator: 'Mehmet Usta', target: 1000, actual: 840, efficiency: 84, scrap: 10 },
+        { id: Date.now() - 86400000, timestamp: new Date(Date.now() - 86400000).toISOString(), dateStr: 'Dün', timeStr: '22:00', shift: 'Akşam Vardiyası', machine: 'Fitil 5', operator: 'Ali Usta', target: 1000, actual: 780, efficiency: 78, scrap: 15 }
+      ];
+      records = demo;
+      localStorage.setItem('fitil_records', JSON.stringify(records));
+      renderDashboard();
+    }
+  </script>
+</body>
+</html>
