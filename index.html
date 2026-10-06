@@ -263,9 +263,10 @@
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50 transition";
 
+                // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
                 let effBadgeClass = "bg-green-100 text-green-700";
-                if (r.efficiency < 75) effBadgeClass = "bg-red-100 text-red-700";
-                else if (r.efficiency < 85) effBadgeClass = "bg-yellow-100 text-yellow-700";
+                if (r.efficiency < 60) effBadgeClass = "bg-red-100 text-red-700";
+                else if (r.efficiency < 70) effBadgeClass = "bg-yellow-100 text-yellow-700";
 
                 tr.innerHTML = `
                     <td class="p-3 font-medium">${r.dateStr}</td>
