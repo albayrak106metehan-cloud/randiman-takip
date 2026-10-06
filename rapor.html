@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js Grafikler -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js DataLabels Eklentisi (Çubuk Üstü Sayılar İçin) -->
+    <!-- Chart.js DataLabels Eklentisi -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
         body { background-color: #f8fafc; }
@@ -152,7 +152,6 @@
     </div>
 
     <script>
-        // DataLabels eklentisini global olarak kaydet
         Chart.register(ChartDataLabels);
 
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
@@ -177,7 +176,7 @@
                 })
                 .catch(err => {
                     console.error("Veri çekme hatası:", err);
-                    alert("Google E-Tablo'dan veriler çekilemedi. Lütfen E-Tablo paylaşım ayarınızı 'Bağlantıya sahip olan herkes görüntüleyebilir' yaptığınızdan emin olun.");
+                    alert("Google E-Tablo'dan veriler çekilemedi.");
                 })
                 .finally(() => showLoading(false));
         }
@@ -293,9 +292,10 @@
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50 transition border-b border-gray-100";
 
+                // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
                 let effBadgeClass = "bg-green-100 text-green-700";
-                if (r.efficiency < 75) effBadgeClass = "bg-red-100 text-red-700";
-                else if (r.efficiency < 85) effBadgeClass = "bg-yellow-100 text-yellow-700";
+                if (r.efficiency < 60) effBadgeClass = "bg-red-100 text-red-700";
+                else if (r.efficiency < 70) effBadgeClass = "bg-yellow-100 text-yellow-700";
 
                 tr.innerHTML = `
                     <td class="p-3 font-medium">${r.dateStr}</td>
@@ -352,13 +352,13 @@
                     maintainAspectRatio: false,
                     layout: {
                         padding: {
-                            top: 25 // Sayıların üstte sıkışmaması için boşluk
+                            top: 25
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 110, // Sayıların yukarı taşmaması için
+                            max: 110,
                             ticks: { callback: value => '%' + value }
                         }
                     },
