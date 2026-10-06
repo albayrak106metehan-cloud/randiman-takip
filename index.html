@@ -52,7 +52,7 @@
                     <label class="block text-sm font-medium text-gray-600 mb-1">Makine Seçimi</label>
                     <select id="inputMachine" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         <option value="">Makine Seçiniz</option>
-                        <!-- 16 Makine Otomatik Eklenecek -->
+                        <!-- Fitil - 1'den Fitil - 16'ya Kadar Otomatik Eklenecek -->
                     </select>
                 </div>
 
@@ -137,7 +137,7 @@
 
     <script>
         // Google Apps Script Web App URL
-                const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzpWxBfNzpHncBkxHYVsntQqiIebSV3J85teosb66IxeofdYZqL-OxMCc2lWG9ebgCH/exec";
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbymipY1Hd3AIqGw9o-9jb2_1bh_HQi0kea5p2vH6M9VneEOv1dv4NcpxMqJ4b0X57OB/exec";
 
         // Sayfa Yüklendiğinde
         document.addEventListener("DOMContentLoaded", function() {
@@ -147,13 +147,13 @@
             loadLocalRecords();
         });
 
-        // 16 Makineyi Select Kutusu İçine Ekle
+        // 16 Makineyi 'Fitil - X' Olarak Select Kutusu İçine Ekle
         function initMachines() {
             const select = document.getElementById("inputMachine");
             for (let i = 1; i <= 16; i++) {
                 const opt = document.createElement("option");
-                opt.value = `Makine ${i}`;
-                opt.textContent = `Makine ${i}`;
+                opt.value = `Fitil - ${i}`;
+                opt.textContent = `Fitil - ${i}`;
                 select.appendChild(opt);
             }
         }
@@ -205,7 +205,7 @@
             submitBtn.innerHTML = `<span>Kaydediliyor ve Gönderiliyor...</span>`;
 
             try {
-                // 1. Google E-Tablolar'a Gönder (no-cors modunda isteği ilet)
+                // 1. Google E-Tablolar'a Gönder
                 await fetch(GOOGLE_SHEETS_URL, {
                     method: "POST",
                     mode: "no-cors",
@@ -215,7 +215,7 @@
                     body: JSON.stringify(payload)
                 });
 
-                // 2. Cihazın kendi yerel hafızasına da ekle (Ekranda listelemek için)
+                // 2. Cihazın kendi yerel hafızasına da ekle
                 saveToLocalStorage(payload);
 
                 // Başarı Mesajı Göster
