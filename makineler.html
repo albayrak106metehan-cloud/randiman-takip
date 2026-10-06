@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <p class="text-xs text-slate-400 text-center">💡 Geçmiş vardiya ve randıman detaylarını görmek için herhangi bir makine kartının üzerine tıklayın.</p>
+        <p class="text-xs text-slate-400 text-center">💡 Vardiya bazlı en güncel randıman detaylarını görmek için herhangi bir makine kartının üzerine tıklayın.</p>
 
         <!-- 16 Makine Kartlar Izgarası -->
         <div id="machinesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -187,7 +187,6 @@
                 let operatorText = "Veri Yok";
                 let masterText = "-";
                 let dateText = "-";
-                let noteText = "-";
                 let effValue = 0;
 
                 if (lastEntry) {
@@ -196,7 +195,6 @@
                     operatorText = lastEntry.operator;
                     masterText = lastEntry.master;
                     dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
-                    noteText = lastEntry.description;
 
                     if (effValue >= 85) {
                         goodCount++;
@@ -266,20 +264,30 @@
             document.getElementById("countDanger").textContent = dangerCount;
         }
 
-        // Tıklanan Makinenin Detaylarını Açan Fonksiyon
+        // HER VARDİYADAN SADECE EN SON GİRİLEN VERİYİ GÖSTEREN FONKSİYON
         function openMachineDetail(machineName) {
-            const entries = rawData.filter(d => d.machine === machineName).reverse(); // En yeni en üstte
+            const allMachineEntries = rawData.filter(d => d.machine === machineName);
             
-            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya & Randıman Detayları`;
-            document.getElementById("modalSubTitle").textContent = `Toplam ${entries.length} vardiya kaydı bulundu.`;
+            // Tarih + Vardiya bazlı en son kaydı grupla
+            const shiftMap = {};
+            allMachineEntries.forEach(entry => {
+                const uniqueKey = `${entry.dateStr}_${entry.shift}`;
+                shiftMap[uniqueKey] = entry; // Üstüne yazarak en son girilen saati korur
+            });
+
+            // Tekil vardiya listesini diziye çevirip yeniden eskiye sırala
+            const uniqueShiftEntries = Object.values(shiftMap).reverse();
+
+            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya Detayları`;
+            document.getElementById("modalSubTitle").textContent = `Toplam ${uniqueShiftEntries.length} farkı vardiya kaydı görüntüleniyor.`;
 
             const tbody = document.getElementById("modalTableBody");
             tbody.innerHTML = "";
 
-            if (entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu makineye ait geçmiş kayıt bulunamadı.</td></tr>`;
+            if (uniqueShiftEntries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu makineye ait vardiya kaydı bulunamadı.</td></tr>`;
             } else {
-                entries.forEach(r => {
+                uniqueShiftEntries.forEach(r => {
                     let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
                     if (r.efficiency < 75) badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
                     else if (r.efficiency < 85) badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
@@ -290,28 +298,4 @@
                         <td class="p-2.5 font-medium text-slate-200">${r.dateStr} <span class="text-[10px] text-slate-500">(${r.timeStr})</span></td>
                         <td class="p-2.5 text-xs text-slate-400">${r.shift}</td>
                         <td class="p-2.5 text-xs font-medium text-indigo-300">${r.master}</td>
-                        <td class="p-2.5 text-xs text-slate-300">${r.operator}</td>
-                        <td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeClass}">%${r.efficiency}</span></td>
-                        <td class="p-2.5 text-xs text-slate-400 max-w-[120px] truncate" title="${r.description}">${r.description}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            const modal = document.getElementById("detailModal");
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-
-        function closeModal() {
-            const modal = document.getElementById("detailModal");
-            modal.classList.remove("flex");
-            modal.classList.add("hidden");
-        }
-
-        function showLoading(show) {
-            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
-        }
-    </script>
-</body>
-</html>
+                        <td class="p-2.5 text-xs text-slate-
