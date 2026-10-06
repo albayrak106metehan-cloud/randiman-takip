@@ -126,7 +126,7 @@
     <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
         <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p class="font-semibold text-lg text-slate-200">Makinelerin Canlı Verileri Çekiliyor...</p>
+        <p class="font-semibold text-lg text-slate-200">Makinelerin Canlı Verileri Çekildiği...</p>
     </div>
 
     <script>
@@ -247,7 +247,6 @@
                     dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
 
                     if (selectedShift === "ALL") {
-                        // Seçili gündeki vardiyaların ortalaması
                         const totalEff = validEntries.reduce((sum, item) => sum + item.efficiency, 0);
                         effValue = totalEff / validEntries.length;
                     } else {
@@ -325,25 +324,35 @@
             document.getElementById("countDanger").textContent = dangerCount;
         }
 
+        // TIKLANDIĞINDA SADECE SEÇİLİ TARİH VE VARDİYAYA GÖRE FİLTRELENMİŞ DETAYI GÖSTEREN DÜZELTİLMİŞ FONKSİYON
         function openMachineDetail(machineName) {
-            const allMachineEntries = rawData.filter(d => d.machine === machineName);
-            
+            const selectedDate = document.getElementById("filterDate").value;
+            const selectedShift = document.getElementById("filterShift").value;
+
+            // Önce makineye ve seçili tarihe göre süz
+            let filteredEntries = rawData.filter(d => d.machine === machineName && d.dateStr === selectedDate);
+
+            // Eğer özel bir vardiya seçiliyse ona göre de süz
+            if (selectedShift !== "ALL") {
+                filteredEntries = filteredEntries.filter(d => d.shift === selectedShift);
+            }
+
+            // Her vardiyadan en son girilen tek kaydı al
             const shiftMap = {};
-            allMachineEntries.forEach(entry => {
-                const uniqueKey = `${entry.dateStr}_${entry.shift}`;
-                shiftMap[uniqueKey] = entry;
+            filteredEntries.forEach(entry => {
+                shiftMap[entry.shift] = entry;
             });
 
             const uniqueShiftEntries = Object.values(shiftMap).reverse();
 
-            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Geçmiş Vardiya Detayları`;
-            document.getElementById("modalSubTitle").textContent = `Toplam ${uniqueShiftEntries.length} farklı vardiya kaydı bulundu.`;
+            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya Detayları`;
+            document.getElementById("modalSubTitle").textContent = `${selectedDate} tarihi (${selectedShift === "ALL" ? "Tüm Vardiyalar" : selectedShift}) için ${uniqueShiftEntries.length} kayıt bulundu.`;
 
             const tbody = document.getElementById("modalTableBody");
             tbody.innerHTML = "";
 
             if (uniqueShiftEntries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu makineye ait vardiya kaydı bulunamadı.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">${selectedDate} tarihinde bu makineye ait vardiya kaydı bulunamadı.</td></tr>`;
             } else {
                 uniqueShiftEntries.forEach(r => {
                     let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
