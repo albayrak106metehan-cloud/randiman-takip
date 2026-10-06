@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canlı Fitil Makineleri İzleme Paneli</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; } /* Koyu Tema - Fabrika Ekranı Havası */
+    </style>
+</head>
+<body class="font-sans antialiased text-slate-100 pb-12">
+
+    <!-- Üst Bar / Header -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">16 Fitil Makinesi Canlı İzleme Paneli</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="fetchGVizData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    🔄 Canlı Yenile
+                </button>
+                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition shadow">
+                    📝 Veri Girişine Dön
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- Özet Sayaçlar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Toplam Makine</span>
+                <p class="text-2xl font-extrabold text-indigo-400 mt-1">16 Fitil</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Mükemmel (>%85)</span>
+                <p id="countGood" class="text-2xl font-extrabold text-emerald-400 mt-1">0</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Normal (%75 - %85)</span>
+                <p id="countWarning" class="text-2xl font-extrabold text-amber-400 mt-1">0</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Kritik (<%75)</span>
+                <p id="countDanger" class="text-2xl font-extrabold text-rose-500 mt-1">0</p>
+            </div>
+        </div>
+
+        <!-- 16 Makine Kartlar Izgarası -->
+        <div id="machinesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <!-- JavaScript ile 16 Makine Kartı Otomatik Doldurulacak -->
+        </div>
+
+    </div>
+
+    <!-- Yükleniyor Göstergesi -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
+        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="font-semibold text-lg text-slate-200">Makinelerin Canlı Verileri Çekiliyor...</p>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
+        let rawData = [];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchGVizData();
+        });
+
+        function fetchGVizData() {
+            showLoading(true);
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+
+            fetch(url)
+                .then(res => res.text())
+                .then(rep => {
+                    const jsonString = rep.substring(47, rep.length - 2);
+                    const json = JSON.parse(jsonString);
+                    parseGVizRows(json.table.rows);
+                })
+                .catch(err => {
+                    console.error("Veri çekme hatası:", err);
+                    alert("E-Tablo verileri çekilemedi. Paylaşım ayarlarını kontrol edin.");
+                })
+                .finally(() => showLoading(false));
+        }
+
+        function parseGVizRows(rows) {
+            rawData = [];
+            if (rows) {
+                rows.forEach(r => {
+                    const c = r.c;
+                    if (c && c[0] && c[0].v !== null) {
+                        let rawDate = c[0].f || c[0].v;
+                        if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
+                            const dateParts = rawDate.match(/\d+/g);
+                            if (dateParts) {
+                                const year = dateParts[0];
+                                const month = String(parseInt(dateParts[1]) + 1).padStart(2, '0');
+                                const day = String(dateParts[2]).padStart(2, '0');
+                                rawDate = `${year}-${month}-${day}`;
+                            }
+                        }
+
+                        rawData.push({
+                            dateStr: String(rawDate).split('T')[0],
+                            timeStr: c[1] ? c[1].v : "-",
+                            shift: c[2] ? c[2].v : "-",
+                            master: c[3] ? c[3].v : "-",
+                            machine: c[4] ? c[4].v : "-",
+                            operator: c[5] ? c[5].v : "-",
+                            efficiency: c[6] ? parseFloat(c[6].v) || 0 : 0,
+                            description: c[7] ? c[7].v : "-"
+                        });
+                    }
+                });
+            }
+
+            renderMachineGrid();
+        }
+
+        function renderMachineGrid() {
+            const grid = document.getElementById("machinesGrid");
+            grid.innerHTML = "";
+
+            let goodCount = 0;
+            let warningCount = 0;
+            let dangerCount = 0;
+
+            for (let i = 1; i <= 16; i++) {
+                const machineName = `Fitil - ${i}`;
+                
+                // İlgili makineye ait en son girilen kaydı bul
+                const lastEntry = rawData.filter(d => d.machine === machineName).pop();
+
+                let cardBg = "bg-slate-900 border-slate-800";
+                let badgeClass = "bg-slate-800 text-slate-400 border-slate-700";
+                let progressBg = "bg-slate-700";
+                let effText = "%--";
+                let operatorText = "Veri Yok";
+                let masterText = "-";
+                let dateText = "-";
+                let noteText = "-";
+                let effValue = 0;
+
+                if (lastEntry) {
+                    effValue = lastEntry.efficiency;
+                    effText = `%${effValue.toFixed(1)}`;
+                    operatorText = lastEntry.operator;
+                    masterText = lastEntry.master;
+                    dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
+                    noteText = lastEntry.description;
+
+                    if (effValue >= 85) {
+                        goodCount++;
+                        cardBg = "bg-emerald-950/30 border-emerald-500/40";
+                        badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+                        progressBg = "bg-emerald-500";
+                    } else if (effValue >= 75) {
+                        warningCount++;
+                        cardBg = "bg-amber-950/30 border-amber-500/40";
+                        badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+                        progressBg = "bg-amber-500";
+                    } else {
+                        dangerCount++;
+                        cardBg = "bg-rose-950/30 border-rose-500/40";
+                        badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+                        progressBg = "bg-rose-500";
+                    }
+                }
+
+                const cardHtml = `
+                    <div class="rounded-xl border ${cardBg} p-5 shadow-lg flex flex-col justify-between space-y-4 hover:scale-[1.02] transition duration-200">
+                        <div class="flex justify-between items-center border-b border-slate-800/80 pb-3">
+                            <span class="font-bold text-lg text-slate-100 flex items-center gap-2">
+                                ⚙️ ${machineName}
+                            </span>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${badgeClass}">
+                                ${effText}
+                            </span>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Randıman Oranı</span>
+                                <span class="font-semibold text-slate-200">${effText}</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div class="${progressBg} h-2 rounded-full transition-all duration-500" style="width: ${Math.min(effValue, 100)}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-xs space-y-1.5 text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/50">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Operatör:</span>
+                                <span class="font-medium text-indigo-300">${operatorText}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Usta:</span>
+                                <span class="font-medium text-slate-300">${masterText}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Son Kayıt:</span>
+                                <span class="text-[11px] text-slate-400">${dateText}</span>
+                            </div>
+                            ${noteText && noteText !== "-" ? `
+                                <div class="pt-1 border-t border-slate-800 text-[11px] text-amber-300/90 truncate" title="${noteText}">
+                                    💬 ${noteText}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                grid.innerHTML += cardHtml;
+            }
+
+            document.getElementById("countGood").textContent = goodCount;
+            document.getElementById("countWarning").textContent = warningCount;
+            document.getElementById("countDanger").textContent = dangerCount;
+        }
+
+        function showLoading(show) {
+            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
+        }
+    </script>
+</body>
+</html>
