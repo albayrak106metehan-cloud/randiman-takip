@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        <!-- Grafikler Satırı 1: Makineler & Vardiyalar -->
+        <!-- Grafikler Satırı 1 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-md font-bold text-gray-700 mb-4 flex justify-between items-center">
@@ -104,7 +104,7 @@
             </div>
         </div>
 
-        <!-- Grafikler Satırı 2: Vardiya Ustaları & Operatörler -->
+        <!-- Grafikler Satırı 2 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-md font-bold text-gray-700 mb-4 flex justify-between items-center">
@@ -134,39 +134,38 @@
     </div>
 
     <script>
-        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbxoPAgovzKCAEsGd_bQC9yXooxKSVlBXQGEMRp9lN_6GMDFxG7zu82V4TPDF1NpNS9G/exec";
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbx1fwxy6q05KSNkuO4-5vFZRTwKwWcloSMjuEzOf5qBxDXl3TMEWkEm5l6lV3btz53j/exec";
 
         let rawData = [];
         let chartInstances = {};
 
         document.addEventListener("DOMContentLoaded", function() {
-            fetchData();
+            loadDataJSONP();
         });
 
-        // Güvenli Veri Çekme Fonksiyonu
-        async function fetchData() {
+        // CORS engeline takılmayan JSONP yükleyici
+        function loadDataJSONP() {
             showLoading(true);
-            try {
-                const response = await fetch(GOOGLE_SHEETS_URL, {
-                    method: 'GET',
-                    redirect: 'follow'
-                });
-                const result = await response.json();
-
-                if (result && result.result === "success") {
-                    rawData = result.data;
-                    setDefaultDates();
-                    applyFilters();
-                } else {
-                    alert("Veri okunamadı: " + (result ? result.error : "Bilinmeyen Hata"));
-                }
-            } catch (err) {
-                console.error("Fetch hatası:", err);
-                alert("Veriler çekilirken bir sorun oluştu. Lütfen bağlantınızı veya Apps Script yayınlama ayarlarınızı kontrol edin.");
-            } finally {
+            const script = document.createElement('script');
+            script.src = GOOGLE_SHEETS_URL + '?callback=onSheetsDataLoaded';
+            script.onerror = function() {
                 showLoading(false);
-            }
+                alert("Veriler yüklenirken bağlantı hatası oluştu. Lütfen Apps Script yayın ayarlarını kontrol edin.");
+            };
+            document.body.appendChild(script);
         }
+
+        // Google Apps Script'ten yanıt gelince çalışan fonksiyon
+        window.onSheetsDataLoaded = function(result) {
+            showLoading(false);
+            if (result && result.result === "success") {
+                rawData = result.data;
+                setDefaultDates();
+                applyFilters();
+            } else {
+                alert("Veri okunamadı: " + (result ? result.error : "Bilinmeyen Hata"));
+            }
+        };
 
         function setDefaultDates() {
             if (!rawData || rawData.length === 0) return;
