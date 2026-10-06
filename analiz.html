@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randıman Analiz & Raporlama Paneli</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js Grafikler -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8fafc; }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800 pb-12">
+
+    <!-- Üst Bar / Header -->
+    <header class="bg-slate-800 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">📈</span>
+                <h1 class="text-xl md:text-2xl font-bold">Fitil Randıman Analiz & Rapor Paneli</h1>
+            </div>
+            <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
+                <span>📝 Veri Girişine Dön</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- Filtreleme Alanı -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-base font-bold text-gray-700 mb-4 flex items-center gap-2">
+                🔍 Tarih ve Vardiya Filtresi
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Başlangıç Tarihi</label>
+                    <input type="date" id="startDate" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Bitiş Tarihi</label>
+                    <input type="date" id="endDate" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Filtresi</label>
+                    <select id="filterShift" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="ALL">Tüm Vardiyalar</option>
+                        <option value="1. Vardiya (08:00 - 16:00)">1. Vardiya (08:00 - 16:00)</option>
+                        <option value="2. Vardiya (16:00 - 24:00)">2. Vardiya (16:00 - 24:00)</option>
+                        <option value="3. Vardiya (00:00 - 08:00)">3. Vardiya (00:00 - 08:00)</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="applyFilters()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
+                        Filtrele & Analiz Et
+                    </button>
+                    <button onclick="resetFilters()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+                        Sıfırla
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Özet KPI Kartları -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">Toplam Kayıt</span>
+                <p id="kpiRecordCount" class="text-2xl font-bold text-gray-800 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">Genel Ort. Randıman</span>
+                <p id="kpiAvgEfficiency" class="text-2xl font-bold text-indigo-600 mt-1">%0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">En Yüksek Randıman</span>
+                <p id="kpiMaxEfficiency" class="text-2xl font-bold text-emerald-600 mt-1">%0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">En Düşük Randıman</span>
+                <p id="kpiMinEfficiency" class="text-2xl font-bold text-rose-600 mt-1">%0</p>
+            </div>
+        </div>
+
+        <!-- Grafikler Satırı 1: Makineler & Vardiyalar -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-md font-bold text-gray-700 mb-4 flex justify-between items-center">
+                    <span>⚙️️ Makine Bazlı Ortalama Randıman</span>
+                </h3>
+                <div class="h-72">
+                    <canvas id="chartMachines"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-md font-bold text-gray-700 mb-4 flex justify-between items-center">
+                    <span>🕒 Vardiya Bazlı Ortalama Randıman</span>
+                </h3>
+                <div class="h-72">
+                    <canvas id="chartShifts"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafikler Satırı 2: Vardiya Ustaları & Operatörler -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-md font-bold text-gray-700 mb-4 flex justify-between items-center">
+                    <span>👨‍✈️ Vardiya Ustaları Performansı</span>
+                </h3>
+                <div class="h-72">
+                    <canvas id="chartMasters"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-md font-bold text-gray-700 mb-4 flex justify-between items-center">
+                    <span>👷 Operatör Verimlilik Ortalamaları</span>
+                </h3>
+                <div class="h-72">
+                    <canvas id="chartOperators"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Yükleniyor Ekranı -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
+        <div class="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="font-semibold text-lg">Google E-Tablo'dan Veriler Çekiliyor...</p>
+    </div>
+
+    <script>
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbymipY1Hd3AIqGw9o-9jb2_1bh_HQi0kea5p2vH6M9VneEOv1dv4NcpxMqJ4b0X57OB/exec";
+
+        let rawData = [];
+        let chartInstances = {};
+
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchDataFromSheets();
+        });
+
+        async function fetchDataFromSheets() {
+            showLoading(true);
+            try {
+                const response = await fetch(GOOGLE_SHEETS_URL);
+                const result = await response.json();
+                
+                if (result.result === "success") {
+                    rawData = result.data;
+                    setDefaultDates();
+                    applyFilters();
+                } else {
+                    alert("Veri çekilemedi: " + result.error);
+                }
+            } catch (err) {
+                console.error("Veri çekme hatası:", err);
+                alert("Google E-Tablolar'dan veriler çekilirken bir hata oluştu.");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function setDefaultDates() {
+            if (rawData.length === 0) return;
+            const dates = rawData.map(d => d.dateStr).filter(Boolean).sort();
+            document.getElementById("startDate").value = dates[0];
+            document.getElementById("endDate").value = dates[dates.length - 1];
+        }
+
+        function applyFilters() {
+            const start = document.getElementById("startDate").value;
+            const end = document.getElementById("endDate").value;
+            const shift = document.getElementById("filterShift").value;
+
+            const filtered = rawData.filter(item => {
+                const matchStart = start ? item.dateStr >= start : true;
+                const matchEnd = end ? item.dateStr <= end : true;
+                const matchShift = shift !== "ALL" ? item.shift === shift : true;
+                return matchStart && matchEnd && matchShift;
+            });
+
+            renderDashboard(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById("filterShift").value = "ALL";
+            setDefaultDates();
+            applyFilters();
+        }
+
+        function renderDashboard(data) {
+            document.getElementById("kpiRecordCount").textContent = data.length;
+            if (data.length === 0) {
+                document.getElementById("kpiAvgEfficiency").textContent = "%0";
+                document.getElementById("kpiMaxEfficiency").textContent = "%0";
+                document.getElementById("kpiMinEfficiency").textContent = "%0";
+                destroyCharts();
+                return;
+            }
+
+            const effs = data.map(d => d.efficiency);
+            const avg = (effs.reduce((a, b) => a + b, 0) / effs.length).toFixed(1);
+            const max = Math.max(...effs).toFixed(1);
+            const min = Math.min(...effs).toFixed(1);
+
+            document.getElementById("kpiAvgEfficiency").textContent = `%${avg}`;
+            document.getElementById("kpiMaxEfficiency").textContent = `%${max}`;
+            document.getElementById("kpiMinEfficiency").textContent = `%${min}`;
+
+            const machineData = groupAverage(data, "machine");
+            const shiftData = groupAverage(data, "shift");
+            const masterData = groupAverage(data, "master");
+            const operatorData = groupAverage(data, "operator");
+
+            buildBarChart("chartMachines", Object.keys(machineData), Object.values(machineData), "Makine Randımanı (%)", "#6366f1");
+            buildBarChart("chartShifts", Object.keys(shiftData), Object.values(shiftData), "Vardiya Ortalaması (%)", "#0ea5e9");
+            buildBarChart("chartMasters", Object.keys(masterData), Object.values(masterData), "Usta Ortalaması (%)", "#8b5cf6");
+            buildBarChart("chartOperators", Object.keys(operatorData), Object.values(operatorData), "Operatör Ortalaması (%)", "#10b981");
+        }
+
+        function groupAverage(data, key) {
+            const totals = {};
+            const counts = {};
+
+            data.forEach(item => {
+                const label = item[key] || "Tanımsız";
+                totals[label] = (totals[label] || 0) + item.efficiency;
+                counts[label] = (counts[label] || 0) + 1;
+            });
+
+            const result = {};
+            Object.keys(totals).forEach(label => {
+                result[label] = (totals[label] / counts[label]).toFixed(1);
+            });
+            return result;
+        }
+
+        function buildBarChart(canvasId, labels, dataValues, datasetLabel, color) {
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+
+            const ctx = document.getElementById(canvasId).getContext("2d");
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: datasetLabel,
+                        data: dataValues,
+                        backgroundColor: color + "bb",
+                        borderColor: color,
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => '%' + value }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function destroyCharts() {
+            Object.keys(chartInstances).forEach(key => {
+                if (chartInstances[key]) chartInstances[key].destroy();
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
+        }
+    </script>
+</body>
+</html>
