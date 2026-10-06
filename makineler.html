@@ -35,6 +35,30 @@
 
     <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
+        <!-- Tarih ve Vardiya Filtreleme Alanı -->
+        <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 shadow-md">
+            <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">📅 Tarih Seçimi</label>
+                    <input type="date" id="filterDate" onchange="renderMachineGrid()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">🕒 Vardiya Seçimi</label>
+                    <select id="filterShift" onchange="renderMachineGrid()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="ALL">Tüm Vardiyalar (Ortalama)</option>
+                        <option value="1. Vardiya (08:00 - 16:00)">1. Vardiya (08:00 - 16:00)</option>
+                        <option value="2. Vardiya (16:00 - 24:00)">2. Vardiya (16:00 - 24:00)</option>
+                        <option value="3. Vardiya (00:00 - 08:00)">3. Vardiya (00:00 - 08:00)</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 sm:col-span-1 md:col-span-2">
+                    <button onclick="resetToToday()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1">
+                        📆 Bugüne Dön / Sıfırla
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Özet Sayaçlar -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
@@ -55,7 +79,7 @@
             </div>
         </div>
 
-        <p class="text-xs text-slate-400 text-center">💡 Kartlarda her makinenin son 3 vardiyasının ortalama randımanı gösterilir. Detaylar için karta tıklayın.</p>
+        <p class="text-xs text-slate-400 text-center">💡 Seçili tarih ve vardiyaya göre filtreleme yapılır. Detaylar için makine kartına tıklayın.</p>
 
         <!-- 16 Makine Kartlar Izgarası -->
         <div id="machinesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -110,8 +134,20 @@
         let rawData = [];
 
         document.addEventListener("DOMContentLoaded", function() {
+            setTodayDate();
             fetchGVizData();
         });
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("filterDate").value = today;
+        }
+
+        function resetToToday() {
+            setTodayDate();
+            document.getElementById("filterShift").value = "ALL";
+            renderMachineGrid();
+        }
 
         function fetchGVizData() {
             showLoading(true);
@@ -169,60 +205,71 @@
             const grid = document.getElementById("machinesGrid");
             grid.innerHTML = "";
 
+            const selectedDate = document.getElementById("filterDate").value;
+            const selectedShift = document.getElementById("filterShift").value;
+
             let goodCount = 0;
             let warningCount = 0;
             let dangerCount = 0;
 
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
-                const allMachineEntries = rawData.filter(d => d.machine === machineName);
-
-                // Her vardiyanın sadece en son girilen kaydını filtrele
-                const shiftMap = {};
-                allMachineEntries.forEach(entry => {
-                    const uniqueKey = `${entry.dateStr}_${entry.shift}`;
-                    shiftMap[uniqueKey] = entry;
-                });
-
-                const uniqueShiftEntries = Object.values(shiftMap);
                 
-                // Son 3 vardiya kaydını al
-                const last3Shifts = uniqueShiftEntries.slice(-3);
-                const lastEntry = last3Shifts[last3Shifts.length - 1];
+                // Seçilen Tarih ve Makineye Ait Kayıtları Süz
+                let filteredEntries = rawData.filter(d => d.machine === machineName && d.dateStr === selectedDate);
 
-                let cardBg = "bg-slate-900 border-slate-800";
-                let badgeClass = "bg-slate-800 text-slate-400 border-slate-700";
+                // Vardiya Filtresi
+                if (selectedShift !== "ALL") {
+                    filteredEntries = filteredEntries.filter(d => d.shift === selectedShift);
+                }
+
+                // Her vardiya için sadece en son girilen kaydı koru
+                const shiftMap = {};
+                filteredEntries.forEach(entry => {
+                    shiftMap[entry.shift] = entry;
+                });
+                const validEntries = Object.values(shiftMap);
+
+                let cardBg = "bg-slate-900 border-slate-800 opacity-60";
+                let badgeClass = "bg-slate-800 text-slate-500 border-slate-700";
                 let progressBg = "bg-slate-700";
                 let effText = "%--";
                 let operatorText = "Veri Yok";
                 let masterText = "-";
-                let dateText = "-";
-                let avgValue = 0;
+                let dateText = selectedDate;
+                let effValue = 0;
 
-                if (last3Shifts.length > 0) {
-                    // Son 3 vardiyanın ortalamasını hesapla
-                    const totalEff = last3Shifts.reduce((sum, item) => sum + item.efficiency, 0);
-                    avgValue = totalEff / last3Shifts.length;
-                    effText = `%${avgValue.toFixed(1)}`;
-                    
+                if (validEntries.length > 0) {
+                    cardBg = "bg-slate-900 border-slate-800 opacity-100";
+                    const lastEntry = validEntries[validEntries.length - 1];
                     operatorText = lastEntry.operator;
                     masterText = lastEntry.master;
                     dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
 
-                    // YENİ RENK KURALI (Son 3 Vardiya Ortalamasına Göre)
-                    if (avgValue >= 70) {
+                    if (selectedShift === "ALL") {
+                        // Seçili gündeki vardiyaların ortalaması
+                        const totalEff = validEntries.reduce((sum, item) => sum + item.efficiency, 0);
+                        effValue = totalEff / validEntries.length;
+                    } else {
+                        effValue = lastEntry.efficiency;
+                    }
+
+                    effText = `%${effValue.toFixed(1)}`;
+
+                    // Renk Kuralı (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
+                    if (effValue >= 70) {
                         goodCount++;
-                        cardBg = "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400";
+                        cardBg = "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400 opacity-100";
                         badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
                         progressBg = "bg-emerald-500";
-                    } else if (avgValue >= 60) {
+                    } else if (effValue >= 60) {
                         warningCount++;
-                        cardBg = "bg-amber-950/30 border-amber-500/40 hover:border-amber-400";
+                        cardBg = "bg-amber-950/30 border-amber-500/40 hover:border-amber-400 opacity-100";
                         badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
                         progressBg = "bg-amber-500";
                     } else {
                         dangerCount++;
-                        cardBg = "bg-rose-950/30 border-rose-500/40 hover:border-rose-400";
+                        cardBg = "bg-rose-950/30 border-rose-500/40 hover:border-rose-400 opacity-100";
                         badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
                         progressBg = "bg-rose-500";
                     }
@@ -241,25 +288,25 @@
 
                         <div>
                             <div class="flex justify-between text-xs text-slate-400 mb-1">
-                                <span>Son 3 Vardiya Ort.</span>
+                                <span>${selectedShift === "ALL" ? "Günlük Ort. Randıman" : "Vardiya Randımanı"}</span>
                                 <span class="font-semibold text-slate-200">${effText}</span>
                             </div>
                             <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                                <div class="${progressBg} h-2 rounded-full transition-all duration-500" style="width: ${Math.min(avgValue, 100)}%"></div>
+                                <div class="${progressBg} h-2 rounded-full transition-all duration-500" style="width: ${Math.min(effValue, 100)}%"></div>
                             </div>
                         </div>
 
                         <div class="text-xs space-y-1.5 text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/50">
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Son Operatör:</span>
+                                <span class="text-slate-500">Operatör:</span>
                                 <span class="font-medium text-indigo-300">${operatorText}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Son Usta:</span>
+                                <span class="text-slate-500">Usta:</span>
                                 <span class="font-medium text-slate-300">${masterText}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Son Kayıt:</span>
+                                <span class="text-slate-500">Kayıt:</span>
                                 <span class="text-[11px] text-slate-400">${dateText}</span>
                             </div>
                         </div>
@@ -289,8 +336,8 @@
 
             const uniqueShiftEntries = Object.values(shiftMap).reverse();
 
-            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya Detayları`;
-            document.getElementById("modalSubTitle").textContent = `Toplam ${uniqueShiftEntries.length} farklı vardiya kaydı görüntüleniyor.`;
+            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Geçmiş Vardiya Detayları`;
+            document.getElementById("modalSubTitle").textContent = `Toplam ${uniqueShiftEntries.length} farklı vardiya kaydı bulundu.`;
 
             const tbody = document.getElementById("modalTableBody");
             tbody.innerHTML = "";
