@@ -116,67 +116,38 @@
     </div>
 
     <script>
-        // BURAYA E-TABLO ID'NİZİ YAPIŞTIRIN
-        const SPREADSHEET_ID = "YOUR_SPREADSHEET_ID_HERE";
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbz67x2uYtx9n1VziaTPCOqWf3XAozvWcX_gmov5trmK_44tpAAQCNoh-uOfEYIAanKj/exec";
 
         let rawData = [];
         let chartInstances = {};
 
         document.addEventListener("DOMContentLoaded", function() {
-            fetchGVizData();
+            fetchDataJSONP();
         });
 
-        function fetchGVizData() {
+        function fetchDataJSONP() {
             showLoading(true);
-            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+            const script = document.createElement('script');
+            script.src = `${GOOGLE_SHEETS_URL}?callback=handleSheetsData`;
+            
+            script.onerror = function() {
+                showLoading(false);
+                alert("Veriler çekilirken ağ hatası oluştu. Lütfen Apps Script yayınlamanızı kontrol edin.");
+            };
 
-            fetch(url)
-                .then(res => res.text())
-                .then(rep => {
-                    // GViz JSON verisini temizle
-                    const jsonString = rep.substring(47, rep.length - 2);
-                    const json = JSON.parse(jsonString);
-                    parseGVizRows(json.table.rows);
-                })
-                .catch(err => {
-                    console.error("Veri çekme hatası:", err);
-                    alert("Google E-Tablo'dan veriler çekilemedi. Lütfen E-Tablo paylaşım ayarınızı 'Bağlantıya sahip olan herkes görüntüleyebilir' yaptığınızdan emin olun.");
-                })
-                .finally(() => showLoading(false));
+            document.body.appendChild(script);
         }
 
-        function parseGVizRows(rows) {
-            rawData = [];
-            rows.forEach(r => {
-                const c = r.c;
-                if (c && c[0] && c[0].v) {
-                    let rawDate = c[0].f || c[0].v;
-                    if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
-                        const dateParts = rawDate.match(/\d+/g);
-                        if (dateParts) {
-                            const year = dateParts[0];
-                            const month = String(parseInt(dateParts[1]) + 1).padStart(2, '0');
-                            const day = String(dateParts[2]).padStart(2, '0');
-                            rawDate = `${year}-${month}-${day}`;
-                        }
-                    }
-
-                    rawData.push({
-                        dateStr: String(rawDate).split('T')[0],
-                        timeStr: c[1] ? c[1].v : "-",
-                        shift: c[2] ? c[2].v : "-",
-                        master: c[3] ? c[3].v : "-",
-                        machine: c[4] ? c[4].v : "-",
-                        operator: c[5] ? c[5].v : "-",
-                        efficiency: c[6] ? parseFloat(c[6].v) || 0 : 0,
-                        description: c[7] ? c[7].v : "-"
-                    });
-                }
-            });
-
-            setDefaultDates();
-            applyFilters();
-        }
+        window.handleSheetsData = function(result) {
+            showLoading(false);
+            if (result && result.result === "success") {
+                rawData = result.data || [];
+                setDefaultDates();
+                applyFilters();
+            } else {
+                alert("Veri okunamadı: " + (result ? result.error : "Bilinmeyen Hata"));
+            }
+        };
 
         function setDefaultDates() {
             if (!rawData || rawData.length === 0) return;
