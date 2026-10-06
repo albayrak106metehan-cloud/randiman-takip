@@ -50,8 +50,8 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">Vardiya Ustası</label>
-                    <input type="text" id="inputOperator" placeholder="Örn: Ahmet Usta" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <p class="text-[11px] text-gray-400 mt-1">💡 Son yazılan usta adı bir sonraki kayıt için otomatik hatırlanır.</p>
+                    <input type="text" id="inputMaster" placeholder="Örn: Ahmet Usta" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <p class="text-[11px] text-gray-400 mt-1">💡 Usta adı sonraki kayıtlar için otomatik hatırlanır.</p>
                 </div>
 
                 <div>
@@ -60,6 +60,11 @@
                         <option value="">Makine Seçiniz</option>
                         <!-- Fitil - 1'den Fitil - 16'ya Kadar Otomatik Eklenecek -->
                     </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Operatör</label>
+                    <input type="text" id="inputOperator" placeholder="Örn: Mehmet Yılmaz" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
 
                 <div>
@@ -117,15 +122,16 @@
                             <tr>
                                 <th class="p-3">Tarih</th>
                                 <th class="p-3">Vardiya</th>
+                                <th class="p-3">Usta</th>
                                 <th class="p-3">Makine</th>
-                                <th class="p-3">Vardiya Ustası</th>
+                                <th class="p-3">Operatör</th>
                                 <th class="p-3">Randıman</th>
                                 <th class="p-3">Not</th>
                             </tr>
                         </thead>
                         <tbody id="recordsTable" class="divide-y divide-gray-100">
                             <tr>
-                                <td colspan="6" class="p-4 text-center text-gray-400">Henüz kayıt girilmedi.</td>
+                                <td colspan="7" class="p-4 text-center text-gray-400">Henüz kayıt girilmedi.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -146,7 +152,7 @@
             setCurrentDate();
             startClock();
             loadLocalRecords();
-            loadSavedOperator(); // Son yazılan usta adını getir
+            loadSavedMaster(); // Son yazılan Usta adını otomatik getir
         });
 
         // 16 Makineyi 'Fitil - X' Olarak Select Kutusu İçine Ekle
@@ -175,10 +181,10 @@
         }
 
         // Son Saklanan Usta İsmini Yükle
-        function loadSavedOperator() {
-            const savedOperator = localStorage.getItem("lastOperatorName");
-            if (savedOperator) {
-                document.getElementById("inputOperator").value = savedOperator;
+        function loadSavedMaster() {
+            const savedMaster = localStorage.getItem("lastMasterName");
+            if (savedMaster) {
+                document.getElementById("inputMaster").value = savedMaster;
             }
         }
 
@@ -191,13 +197,14 @@
 
             const dateVal = document.getElementById("inputDate").value;
             const shiftVal = document.getElementById("inputShift").value;
+            const masterVal = document.getElementById("inputMaster").value;
             const machineVal = document.getElementById("inputMachine").value;
             const operatorVal = document.getElementById("inputOperator").value;
             const efficiencyVal = parseFloat(document.getElementById("inputEfficiency").value);
             const descriptionVal = document.getElementById("inputDescription").value;
 
             // Usta adını bir sonraki kullanım için hafızaya kaydet
-            localStorage.setItem("lastOperatorName", operatorVal);
+            localStorage.setItem("lastMasterName", masterVal);
 
             const now = new Date();
             const timeStr = now.toLocaleTimeString("tr-TR");
@@ -206,6 +213,7 @@
                 dateStr: dateVal,
                 timeStr: timeStr,
                 shift: shiftVal,
+                master: masterVal,
                 machine: machineVal,
                 operator: operatorVal,
                 efficiency: efficiencyVal,
@@ -235,7 +243,8 @@
                 statusMsg.className = "mt-4 p-3 rounded-lg text-sm font-medium text-center bg-green-100 text-green-700 block";
                 statusMsg.textContent = "✅ Veri başarıyla kaydedildi ve Google E-Tablo'ya iletildi!";
 
-                // Formu Sıfırla (Usta Adı KORUNUR, sadece randıman ve not silinir)
+                // Formu Sıfırla (Usta Adı KORUNUR)
+                document.getElementById("inputOperator").value = "";
                 document.getElementById("inputEfficiency").value = "";
                 document.getElementById("inputDescription").value = "";
                 document.getElementById("inputMachine").value = "";
@@ -270,7 +279,7 @@
             const tbody = document.getElementById("recordsTable");
 
             if (records.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Henüz kayıt girilmedi.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">Henüz kayıt girilmedi.</td></tr>`;
                 return;
             }
 
@@ -290,8 +299,9 @@
                 tr.innerHTML = `
                     <td class="p-3 font-medium">${r.dateStr}</td>
                     <td class="p-3 text-xs text-gray-500">${r.shift}</td>
-                    <td class="p-3 font-semibold text-indigo-700">${r.machine}</td>
-                    <td class="p-3 font-medium text-gray-700">${r.operator}</td>
+                    <td class="p-3 font-medium text-indigo-700">${r.master || '-'}</td>
+                    <td class="p-3 font-semibold text-gray-800">${r.machine}</td>
+                    <td class="p-3 text-gray-600">${r.operator}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${effBadgeClass}">%${r.efficiency}</span></td>
                     <td class="p-3 text-xs text-gray-500 max-w-[150px] truncate" title="${r.description}">${r.description}</td>
                 `;
