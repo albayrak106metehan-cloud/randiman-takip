@@ -7,9 +7,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #f1f5f9;
-        }
+        body { background-color: #f1f5f9; }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
@@ -18,9 +16,14 @@
     <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">
-                ⚡ Fitil Makineleri Randıman Takip Paneli
+                ⚡ Fitil Makineleri Takip Paneli
             </h1>
-            <span id="liveClock" class="text-xs md:text-sm bg-indigo-800 px-3 py-1 rounded-full text-indigo-200"></span>
+            <div class="flex items-center gap-3 md:gap-4">
+                <span id="liveClock" class="hidden sm:inline text-xs md:text-sm bg-indigo-800 px-3 py-1 rounded-full text-indigo-200"></span>
+                <a href="analiz.html" class="bg-indigo-900 hover:bg-indigo-950 text-white text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg border border-indigo-400/30 transition flex items-center gap-1 shadow-sm">
+                    📊 Analiz & Raporlar
+                </a>
+            </div>
         </div>
     </header>
 
@@ -84,10 +87,9 @@
             <div id="statusMessage" class="hidden mt-4 p-3 rounded-lg text-sm font-medium text-center"></div>
         </div>
 
-        <!-- Sağ Kolon: Makine Durum Kartları ve Son Girişler -->
+        <!-- Sağ Kolon: Özet Kartlar ve Son Girişler -->
         <div class="lg:col-span-2 space-y-6">
             
-            <!-- Özet İstatistikler -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
                     <span class="text-xs text-gray-500 font-semibold uppercase">Toplam Makine</span>
@@ -109,7 +111,6 @@
                 </div>
             </div>
 
-            <!-- Son Kaydedilen Veriler Listesi -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-700 mb-4 pb-2 border-b flex justify-between items-center">
                     <span>📊 Cihazdaki Son Kayıtlar</span>
@@ -142,10 +143,8 @@
     </div>
 
     <script>
-        // Google Apps Script Web App URL
         const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbymipY1Hd3AIqGw9o-9jb2_1bh_HQi0kea5p2vH6M9VneEOv1dv4NcpxMqJ4b0X57OB/exec";
 
-        // Sayfa Yüklendiğinde
         document.addEventListener("DOMContentLoaded", function() {
             initMachines();
             setCurrentDate();
@@ -183,7 +182,6 @@
             }
         }
 
-        // Anında / Kesintisiz Kayıt Fonksiyonu
         function saveEntry(event) {
             event.preventDefault();
 
@@ -197,7 +195,6 @@
             const efficiencyVal = parseFloat(document.getElementById("inputEfficiency").value);
             const descriptionVal = document.getElementById("inputDescription").value;
 
-            // Usta adını hatırla
             localStorage.setItem("lastMasterName", masterVal);
 
             const now = new Date();
@@ -214,19 +211,14 @@
                 description: descriptionVal || "-"
             };
 
-            // 1. Ekranı ANINDA güncelle (Sıfır bekleme)
             saveToLocalStorage(payload);
 
-            // 2. Formu anında temizle (Makine, Operatör, Randıman ve Notlar sıfırlanır)
             document.getElementById("inputOperator").value = "";
             document.getElementById("inputEfficiency").value = "";
             document.getElementById("inputDescription").value = "";
             document.getElementById("inputMachine").value = "";
-            
-            // İmleci doğrudan tekrar Makine Seçimine odakla
             document.getElementById("inputMachine").focus();
 
-            // Anlık Geribildirim Göster
             statusMsg.className = "mt-4 p-3 rounded-lg text-sm font-medium text-center bg-green-100 text-green-700 block transition";
             statusMsg.textContent = "⚡ Kaydedildi! (E-Tabloya aktarılıyor...)";
 
@@ -234,13 +226,10 @@
                 statusMsg.className = "hidden";
             }, 2500);
 
-            // 3. Google E-Tablo'ya Arka Planda (Siz bekletilmeden) Gönder
             fetch(GOOGLE_SHEETS_URL, {
                 method: "POST",
                 mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             }).catch(err => console.error("Arka plan E-Tablo hatası:", err));
         }
