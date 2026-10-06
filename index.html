@@ -51,14 +51,13 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">Vardiya Ustası</label>
                     <input type="text" id="inputMaster" placeholder="Örn: Ahmet Usta" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <p class="text-[11px] text-gray-400 mt-1">💡 Usta adı sonraki kayıtlar için otomatik hatırlanır.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">💡 Usta adı arka arkaya hızlı kayıtta sabit kalır.</p>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">Makine Seçimi</label>
                     <select id="inputMachine" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         <option value="">Makine Seçiniz</option>
-                        <!-- Fitil - 1'den Fitil - 16'ya Kadar Otomatik Eklenecek -->
                     </select>
                 </div>
 
@@ -77,8 +76,8 @@
                     <textarea id="inputDescription" rows="2" placeholder="Varsa arıza, duruş nedeni veya not yazın..." class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg shadow transition duration-200 flex items-center justify-center gap-2">
-                    <span>Kaydet ve E-Tabloya Gönder</span>
+                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold py-3 rounded-lg shadow transition duration-150 flex items-center justify-center gap-2">
+                    <span>⚡ Hızlı Kaydet</span>
                 </button>
             </form>
 
@@ -105,7 +104,7 @@
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
                     <span class="text-xs text-gray-500 font-semibold uppercase">Veritabanı</span>
                     <p class="text-sm font-bold text-green-600 mt-2 flex items-center justify-center gap-1">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span> Google Sheets
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span> E-Tabloya Bağlı
                     </p>
                 </div>
             </div>
@@ -152,10 +151,9 @@
             setCurrentDate();
             startClock();
             loadLocalRecords();
-            loadSavedMaster(); // Son yazılan Usta adını otomatik getir
+            loadSavedMaster();
         });
 
-        // 16 Makineyi 'Fitil - X' Olarak Select Kutusu İçine Ekle
         function initMachines() {
             const select = document.getElementById("inputMachine");
             for (let i = 1; i <= 16; i++) {
@@ -166,13 +164,11 @@
             }
         }
 
-        // Bugünün Tarihini Varsayılan Ayarla
         function setCurrentDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("inputDate").value = today;
         }
 
-        // Canlı Saat
         function startClock() {
             setInterval(() => {
                 const now = new Date();
@@ -180,7 +176,6 @@
             }, 1000);
         }
 
-        // Son Saklanan Usta İsmini Yükle
         function loadSavedMaster() {
             const savedMaster = localStorage.getItem("lastMasterName");
             if (savedMaster) {
@@ -188,11 +183,10 @@
             }
         }
 
-        // Form Gönderme İşlemi
-        async function saveEntry(event) {
+        // Anında / Kesintisiz Kayıt Fonksiyonu
+        function saveEntry(event) {
             event.preventDefault();
 
-            const submitBtn = document.getElementById("submitBtn");
             const statusMsg = document.getElementById("statusMessage");
 
             const dateVal = document.getElementById("inputDate").value;
@@ -203,7 +197,7 @@
             const efficiencyVal = parseFloat(document.getElementById("inputEfficiency").value);
             const descriptionVal = document.getElementById("inputDescription").value;
 
-            // Usta adını bir sonraki kullanım için hafızaya kaydet
+            // Usta adını hatırla
             localStorage.setItem("lastMasterName", masterVal);
 
             const now = new Date();
@@ -220,60 +214,45 @@
                 description: descriptionVal || "-"
             };
 
-            // Butonu yükleniyor moduna al
-            submitBtn.disabled = true;
-            submitBtn.classList.add("opacity-60");
-            submitBtn.innerHTML = `<span>Kaydediliyor ve Gönderiliyor...</span>`;
+            // 1. Ekranı ANINDA güncelle (Sıfır bekleme)
+            saveToLocalStorage(payload);
 
-            try {
-                // 1. Google E-Tablolar'a Gönder
-                await fetch(GOOGLE_SHEETS_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                });
+            // 2. Formu anında temizle (Makine, Operatör, Randıman ve Notlar sıfırlanır)
+            document.getElementById("inputOperator").value = "";
+            document.getElementById("inputEfficiency").value = "";
+            document.getElementById("inputDescription").value = "";
+            document.getElementById("inputMachine").value = "";
+            
+            // İmleci doğrudan tekrar Makine Seçimine odakla
+            document.getElementById("inputMachine").focus();
 
-                // 2. Cihazın kendi yerel hafızasına da ekle
-                saveToLocalStorage(payload);
+            // Anlık Geribildirim Göster
+            statusMsg.className = "mt-4 p-3 rounded-lg text-sm font-medium text-center bg-green-100 text-green-700 block transition";
+            statusMsg.textContent = "⚡ Kaydedildi! (E-Tabloya aktarılıyor...)";
 
-                // Başarı Mesajı Göster
-                statusMsg.className = "mt-4 p-3 rounded-lg text-sm font-medium text-center bg-green-100 text-green-700 block";
-                statusMsg.textContent = "✅ Veri başarıyla kaydedildi ve Google E-Tablo'ya iletildi!";
+            setTimeout(() => {
+                statusMsg.className = "hidden";
+            }, 2500);
 
-                // Formu Sıfırla (Usta Adı KORUNUR)
-                document.getElementById("inputOperator").value = "";
-                document.getElementById("inputEfficiency").value = "";
-                document.getElementById("inputDescription").value = "";
-                document.getElementById("inputMachine").value = "";
-
-            } catch (err) {
-                console.error("Hata:", err);
-                statusMsg.className = "mt-4 p-3 rounded-lg text-sm font-medium text-center bg-red-100 text-red-700 block";
-                statusMsg.textContent = "❌ Veri gönderilirken bir hata oluştu!";
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove("opacity-60");
-                submitBtn.innerHTML = `<span>Kaydet ve E-Tabloya Gönder</span>`;
-
-                setTimeout(() => {
-                    statusMsg.className = "hidden";
-                }, 4000);
-            }
+            // 3. Google E-Tablo'ya Arka Planda (Siz bekletilmeden) Gönder
+            fetch(GOOGLE_SHEETS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error("Arka plan E-Tablo hatası:", err));
         }
 
-        // Yerel Hafızaya (localStorage) Kayıt
         function saveToLocalStorage(record) {
             let records = JSON.parse(localStorage.getItem("fitilRecords") || "[]");
-            records.unshift(record); // En yeni kaydı üste ekle
-            if (records.length > 20) records.pop(); // Son 20 kaydı tut
+            records.unshift(record);
+            if (records.length > 20) records.pop();
             localStorage.setItem("fitilRecords", JSON.stringify(records));
             loadLocalRecords();
         }
 
-        // Yerel Kayıtları Tabloya Bas
         function loadLocalRecords() {
             let records = JSON.parse(localStorage.getItem("fitilRecords") || "[]");
             const tbody = document.getElementById("recordsTable");
@@ -291,7 +270,6 @@
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50 transition";
 
-                // Randıman rengi belirleme
                 let effBadgeClass = "bg-green-100 text-green-700";
                 if (r.efficiency < 75) effBadgeClass = "bg-red-100 text-red-700";
                 else if (r.efficiency < 85) effBadgeClass = "bg-yellow-100 text-yellow-700";
@@ -308,7 +286,6 @@
                 tbody.appendChild(tr);
             });
 
-            // İstatistikleri Güncelle
             document.getElementById("statLastEntry").textContent = records[0].machine;
             const avg = (totalEff / records.length).toFixed(1);
             document.getElementById("statAvgEfficiency").textContent = `%${avg}`;
