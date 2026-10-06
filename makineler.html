@@ -42,15 +42,15 @@
                 <p class="text-2xl font-extrabold text-indigo-400 mt-1">16 Fitil</p>
             </div>
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Mükemmel (>%85)</span>
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">İyi (≥%70)</span>
                 <p id="countGood" class="text-2xl font-extrabold text-emerald-400 mt-1">0</p>
             </div>
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Normal (%75 - %85)</span>
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Normal (%60 - %70)</span>
                 <p id="countWarning" class="text-2xl font-extrabold text-amber-400 mt-1">0</p>
             </div>
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
-                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Kritik (<%75)</span>
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Kritik (<%60)</span>
                 <p id="countDanger" class="text-2xl font-extrabold text-rose-500 mt-1">0</p>
             </div>
         </div>
@@ -67,7 +67,6 @@
     <!-- Makine Detay Modal (Açılır Pencere) -->
     <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Modal Başlık -->
             <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
                 <div>
                     <h3 id="modalTitle" class="text-xl font-bold text-slate-100 flex items-center gap-2"></h3>
@@ -78,7 +77,6 @@
                 </button>
             </div>
 
-            <!-- Modal İçerik (Vardiya Geçmişi Tablosu) -->
             <div class="p-5 overflow-y-auto flex-1 space-y-4">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
@@ -196,12 +194,13 @@
                     masterText = lastEntry.master;
                     dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
 
-                    if (effValue >= 85) {
+                    // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
+                    if (effValue >= 70) {
                         goodCount++;
                         cardBg = "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400";
                         badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
                         progressBg = "bg-emerald-500";
-                    } else if (effValue >= 75) {
+                    } else if (effValue >= 60) {
                         warningCount++;
                         cardBg = "bg-amber-950/30 border-amber-500/40 hover:border-amber-400";
                         badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
@@ -264,22 +263,19 @@
             document.getElementById("countDanger").textContent = dangerCount;
         }
 
-        // HER VARDİYADAN SADECE EN SON GİRİLEN VERİYİ GÖSTEREN FONKSİYON
         function openMachineDetail(machineName) {
             const allMachineEntries = rawData.filter(d => d.machine === machineName);
             
-            // Tarih + Vardiya bazlı en son kaydı grupla
             const shiftMap = {};
             allMachineEntries.forEach(entry => {
                 const uniqueKey = `${entry.dateStr}_${entry.shift}`;
-                shiftMap[uniqueKey] = entry; // Üstüne yazarak en son girilen saati korur
+                shiftMap[uniqueKey] = entry;
             });
 
-            // Tekil vardiya listesini diziye çevirip yeniden eskiye sırala
             const uniqueShiftEntries = Object.values(shiftMap).reverse();
 
             document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya Detayları`;
-            document.getElementById("modalSubTitle").textContent = `Toplam ${uniqueShiftEntries.length} farkı vardiya kaydı görüntüleniyor.`;
+            document.getElementById("modalSubTitle").textContent = `Toplam ${uniqueShiftEntries.length} farklı vardiya kaydı görüntüleniyor.`;
 
             const tbody = document.getElementById("modalTableBody");
             tbody.innerHTML = "";
@@ -288,9 +284,10 @@
                 tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu makineye ait vardiya kaydı bulunamadı.</td></tr>`;
             } else {
                 uniqueShiftEntries.forEach(r => {
+                    // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
                     let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-                    if (r.efficiency < 75) badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
-                    else if (r.efficiency < 85) badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+                    if (r.efficiency < 60) badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+                    else if (r.efficiency < 70) badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
 
                     const tr = document.createElement("tr");
                     tr.className = "hover:bg-slate-800/50 transition border-b border-slate-800/50";
@@ -298,4 +295,28 @@
                         <td class="p-2.5 font-medium text-slate-200">${r.dateStr} <span class="text-[10px] text-slate-500">(${r.timeStr})</span></td>
                         <td class="p-2.5 text-xs text-slate-400">${r.shift}</td>
                         <td class="p-2.5 text-xs font-medium text-indigo-300">${r.master}</td>
-                        <td class="p-2.5 text-xs text-slate-
+                        <td class="p-2.5 text-xs text-slate-300">${r.operator}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeClass}">%${r.efficiency}</span></td>
+                        <td class="p-2.5 text-xs text-slate-400 max-w-[120px] truncate" title="${r.description}">${r.description}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const modal = document.getElementById("detailModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("detailModal");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
+        }
+
+        function showLoading(show) {
+            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
+        }
+    </script>
+</body>
+</html>
