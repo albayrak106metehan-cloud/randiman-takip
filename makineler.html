@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canlı Fitil Makineleri İzleme Paneli</title>
+    <title>Fitil Makineleri Paneli</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; } /* Koyu Tema - Fabrika Ekranı Havası */
+        body { background-color: #0f172a; }
     </style>
 </head>
 <body class="font-sans antialiased text-slate-100 pb-12">
@@ -20,7 +20,7 @@
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
-                <h1 class="text-xl md:text-2xl font-bold tracking-wide">16 Fitil Makinesi Canlı İzleme Paneli</h1>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">16 Fitil Makinesi İzleme Paneli</h1>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="fetchGVizData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
@@ -55,11 +55,50 @@
             </div>
         </div>
 
+        <p class="text-xs text-slate-400 text-center">💡 Geçmiş vardiya ve randıman detaylarını görmek için herhangi bir makine kartının üzerine tıklayın.</p>
+
         <!-- 16 Makine Kartlar Izgarası -->
         <div id="machinesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            <!-- JavaScript ile 16 Makine Kartı Otomatik Doldurulacak -->
+            <!-- JavaScript ile doldurulacak -->
         </div>
 
+    </div>
+
+    <!-- Makine Detay Modal (Açılır Pencere) -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Modal Başlık -->
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+                <div>
+                    <h3 id="modalTitle" class="text-xl font-bold text-slate-100 flex items-center gap-2"></h3>
+                    <p id="modalSubTitle" class="text-xs text-slate-400 mt-0.5"></p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-lg transition text-sm">
+                    ✕ Kapat
+                </button>
+            </div>
+
+            <!-- Modal İçerik (Vardiya Geçmişi Tablosu) -->
+            <div class="p-5 overflow-y-auto flex-1 space-y-4">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                            <tr>
+                                <th class="p-2.5">Tarih</th>
+                                <th class="p-2.5">Vardiya</th>
+                                <th class="p-2.5">Usta</th>
+                                <th class="p-2.5">Operatör</th>
+                                <th class="p-2.5">Randıman</th>
+                                <th class="p-2.5">Not</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody" class="divide-y divide-slate-800 text-slate-300">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Yükleniyor Göstergesi -->
@@ -138,9 +177,8 @@
 
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
-                
-                // İlgili makineye ait en son girilen kaydı bul
-                const lastEntry = rawData.filter(d => d.machine === machineName).pop();
+                const machineEntries = rawData.filter(d => d.machine === machineName);
+                const lastEntry = machineEntries[machineEntries.length - 1];
 
                 let cardBg = "bg-slate-900 border-slate-800";
                 let badgeClass = "bg-slate-800 text-slate-400 border-slate-700";
@@ -162,26 +200,26 @@
 
                     if (effValue >= 85) {
                         goodCount++;
-                        cardBg = "bg-emerald-950/30 border-emerald-500/40";
+                        cardBg = "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400";
                         badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
                         progressBg = "bg-emerald-500";
                     } else if (effValue >= 75) {
                         warningCount++;
-                        cardBg = "bg-amber-950/30 border-amber-500/40";
+                        cardBg = "bg-amber-950/30 border-amber-500/40 hover:border-amber-400";
                         badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
                         progressBg = "bg-amber-500";
                     } else {
                         dangerCount++;
-                        cardBg = "bg-rose-950/30 border-rose-500/40";
+                        cardBg = "bg-rose-950/30 border-rose-500/40 hover:border-rose-400";
                         badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
                         progressBg = "bg-rose-500";
                     }
                 }
 
                 const cardHtml = `
-                    <div class="rounded-xl border ${cardBg} p-5 shadow-lg flex flex-col justify-between space-y-4 hover:scale-[1.02] transition duration-200">
+                    <div onclick="openMachineDetail('${machineName}')" class="cursor-pointer rounded-xl border ${cardBg} p-5 shadow-lg flex flex-col justify-between space-y-4 hover:scale-[1.03] transition duration-200 group">
                         <div class="flex justify-between items-center border-b border-slate-800/80 pb-3">
-                            <span class="font-bold text-lg text-slate-100 flex items-center gap-2">
+                            <span class="font-bold text-lg text-slate-100 flex items-center gap-2 group-hover:text-indigo-400 transition">
                                 ⚙️ ${machineName}
                             </span>
                             <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${badgeClass}">
@@ -191,7 +229,7 @@
 
                         <div>
                             <div class="flex justify-between text-xs text-slate-400 mb-1">
-                                <span>Randıman Oranı</span>
+                                <span>Son Randıman</span>
                                 <span class="font-semibold text-slate-200">${effText}</span>
                             </div>
                             <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
@@ -209,14 +247,13 @@
                                 <span class="font-medium text-slate-300">${masterText}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Son Kayıt:</span>
+                                <span class="text-slate-500">Kayıt:</span>
                                 <span class="text-[11px] text-slate-400">${dateText}</span>
                             </div>
-                            ${noteText && noteText !== "-" ? `
-                                <div class="pt-1 border-t border-slate-800 text-[11px] text-amber-300/90 truncate" title="${noteText}">
-                                    💬 ${noteText}
-                                </div>
-                            ` : ''}
+                        </div>
+
+                        <div class="text-[11px] text-indigo-400 font-semibold text-right pt-1 flex items-center justify-end gap-1 group-hover:underline">
+                            <span>Vardiya Detayları</span> ➔
                         </div>
                     </div>
                 `;
@@ -227,6 +264,49 @@
             document.getElementById("countGood").textContent = goodCount;
             document.getElementById("countWarning").textContent = warningCount;
             document.getElementById("countDanger").textContent = dangerCount;
+        }
+
+        // Tıklanan Makinenin Detaylarını Açan Fonksiyon
+        function openMachineDetail(machineName) {
+            const entries = rawData.filter(d => d.machine === machineName).reverse(); // En yeni en üstte
+            
+            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya & Randıman Detayları`;
+            document.getElementById("modalSubTitle").textContent = `Toplam ${entries.length} vardiya kaydı bulundu.`;
+
+            const tbody = document.getElementById("modalTableBody");
+            tbody.innerHTML = "";
+
+            if (entries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu makineye ait geçmiş kayıt bulunamadı.</td></tr>`;
+            } else {
+                entries.forEach(r => {
+                    let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+                    if (r.efficiency < 75) badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+                    else if (r.efficiency < 85) badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-slate-800/50 transition border-b border-slate-800/50";
+                    tr.innerHTML = `
+                        <td class="p-2.5 font-medium text-slate-200">${r.dateStr} <span class="text-[10px] text-slate-500">(${r.timeStr})</span></td>
+                        <td class="p-2.5 text-xs text-slate-400">${r.shift}</td>
+                        <td class="p-2.5 text-xs font-medium text-indigo-300">${r.master}</td>
+                        <td class="p-2.5 text-xs text-slate-300">${r.operator}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeClass}">%${r.efficiency}</span></td>
+                        <td class="p-2.5 text-xs text-slate-400 max-w-[120px] truncate" title="${r.description}">${r.description}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const modal = document.getElementById("detailModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("detailModal");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
         }
 
         function showLoading(show) {
