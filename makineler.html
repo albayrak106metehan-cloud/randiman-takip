@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <p class="text-xs text-slate-400 text-center">💡 Vardiya bazlı en güncel randıman detaylarını görmek için herhangi bir makine kartının üzerine tıklayın.</p>
+        <p class="text-xs text-slate-400 text-center">💡 Kartlarda her makinenin son 3 vardiyasının ortalama randımanı gösterilir. Detaylar için karta tıklayın.</p>
 
         <!-- 16 Makine Kartlar Izgarası -->
         <div id="machinesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -175,8 +175,20 @@
 
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
-                const machineEntries = rawData.filter(d => d.machine === machineName);
-                const lastEntry = machineEntries[machineEntries.length - 1];
+                const allMachineEntries = rawData.filter(d => d.machine === machineName);
+
+                // Her vardiyanın sadece en son girilen kaydını filtrele
+                const shiftMap = {};
+                allMachineEntries.forEach(entry => {
+                    const uniqueKey = `${entry.dateStr}_${entry.shift}`;
+                    shiftMap[uniqueKey] = entry;
+                });
+
+                const uniqueShiftEntries = Object.values(shiftMap);
+                
+                // Son 3 vardiya kaydını al
+                const last3Shifts = uniqueShiftEntries.slice(-3);
+                const lastEntry = last3Shifts[last3Shifts.length - 1];
 
                 let cardBg = "bg-slate-900 border-slate-800";
                 let badgeClass = "bg-slate-800 text-slate-400 border-slate-700";
@@ -185,22 +197,25 @@
                 let operatorText = "Veri Yok";
                 let masterText = "-";
                 let dateText = "-";
-                let effValue = 0;
+                let avgValue = 0;
 
-                if (lastEntry) {
-                    effValue = lastEntry.efficiency;
-                    effText = `%${effValue.toFixed(1)}`;
+                if (last3Shifts.length > 0) {
+                    // Son 3 vardiyanın ortalamasını hesapla
+                    const totalEff = last3Shifts.reduce((sum, item) => sum + item.efficiency, 0);
+                    avgValue = totalEff / last3Shifts.length;
+                    effText = `%${avgValue.toFixed(1)}`;
+                    
                     operatorText = lastEntry.operator;
                     masterText = lastEntry.master;
                     dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
 
-                    // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
-                    if (effValue >= 70) {
+                    // YENİ RENK KURALI (Son 3 Vardiya Ortalamasına Göre)
+                    if (avgValue >= 70) {
                         goodCount++;
                         cardBg = "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400";
                         badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
                         progressBg = "bg-emerald-500";
-                    } else if (effValue >= 60) {
+                    } else if (avgValue >= 60) {
                         warningCount++;
                         cardBg = "bg-amber-950/30 border-amber-500/40 hover:border-amber-400";
                         badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
@@ -226,25 +241,25 @@
 
                         <div>
                             <div class="flex justify-between text-xs text-slate-400 mb-1">
-                                <span>Son Randıman</span>
+                                <span>Son 3 Vardiya Ort.</span>
                                 <span class="font-semibold text-slate-200">${effText}</span>
                             </div>
                             <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                                <div class="${progressBg} h-2 rounded-full transition-all duration-500" style="width: ${Math.min(effValue, 100)}%"></div>
+                                <div class="${progressBg} h-2 rounded-full transition-all duration-500" style="width: ${Math.min(avgValue, 100)}%"></div>
                             </div>
                         </div>
 
                         <div class="text-xs space-y-1.5 text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/50">
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Operatör:</span>
+                                <span class="text-slate-500">Son Operatör:</span>
                                 <span class="font-medium text-indigo-300">${operatorText}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Usta:</span>
+                                <span class="text-slate-500">Son Usta:</span>
                                 <span class="font-medium text-slate-300">${masterText}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Kayıt:</span>
+                                <span class="text-slate-500">Son Kayıt:</span>
                                 <span class="text-[11px] text-slate-400">${dateText}</span>
                             </div>
                         </div>
@@ -284,7 +299,6 @@
                 tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu makineye ait vardiya kaydı bulunamadı.</td></tr>`;
             } else {
                 uniqueShiftEntries.forEach(r => {
-                    // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
                     let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
                     if (r.efficiency < 60) badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
                     else if (r.efficiency < 70) badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
