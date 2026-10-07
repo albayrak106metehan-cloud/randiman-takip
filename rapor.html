@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js DataLabels Eklentisi -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- SheetJS Excel Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { background-color: #f8fafc; }
         
@@ -19,9 +21,8 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
-        /* YAZDIRMA (PDF) ÖZEL STİLLERİ - ASLA BOŞ SAYFA GELMEZ */
+        /* YAZDIRMA (PDF) ÖZEL STİLLERİ */
         @media print {
-            /* Yazdırılırken görünmeyecek alanlar */
             header, .no-print, #loadingOverlay {
                 display: none !important;
             }
@@ -39,7 +40,6 @@
                 padding: 0 !important;
             }
 
-            /* Sayfa yapısını A4 olarak sabitle */
             @page {
                 size: A4 portrait;
                 margin: 12mm 10mm 12mm 10mm;
@@ -106,7 +106,7 @@
             </div>
         </div>
 
-        <!-- KPI ÖZET KARTLARI (EKRAN İÇİN) -->
+        <!-- KPI ÖZET KARTLARI -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
             <div class="glass-card p-4 rounded-2xl text-center">
                 <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Kayıt</span>
@@ -173,22 +173,25 @@
             </div>
         </div>
 
-        <!-- EKRANDA GÖRÜNEN VE DOĞRUDAN PDF YAZDIRILAN ŞIK KART -->
+        <!-- EKRANDA GÖRÜNEN KART VE İNDİRME BUTONLARI -->
         <div class="glass-card p-6 rounded-2xl print-only-area">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-200">
                 <div>
                     <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h3>
                     <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-1"></p>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-xs text-gray-400 font-medium no-print">Rapor Tarihi: <span id="pdfPrintTime"></span></span>
-                    <button onclick="triggerPrint()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 no-print">
-                        <span>📄 A4 PDF Raporu İndir</span>
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <!-- EXCEL VE PDF BUTONLARI YAN YANA -->
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
+                        <span>📊 Excel İndir</span>
+                    </button>
+                    <button onclick="triggerPrint()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
+                        <span>📄 A4 PDF İndir</span>
                     </button>
                 </div>
             </div>
 
-            <!-- PDF İÇİNDEKİ MİNİ KPI KARTLARI -->
+            <!-- PDF/EKRAN İÇİNDEKİ MİNİ KPI KARTLARI -->
             <div class="grid grid-cols-4 gap-3 mb-6">
                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
                     <span class="text-[10px] text-gray-500 font-bold uppercase block">KAYIT</span>
@@ -210,7 +213,7 @@
 
             <!-- TABLO -->
             <div class="overflow-x-auto">
-                <table class="w-full text-center border-collapse text-sm">
+                <table id="matrixTable" class="w-full text-center border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
                             <th class="p-3 border border-slate-700 w-1/5">FİTİL</th>
@@ -221,7 +224,7 @@
                         </tr>
                     </thead>
                     <tbody id="displayMatrixBody" class="divide-y divide-gray-200 font-semibold text-xs">
-                        <!-- JS ile doldurulacak -->
+                        <!-- JS Doldurur -->
                     </tbody>
                 </table>
             </div>
@@ -238,6 +241,7 @@
     <script>
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
         let rawData = [];
+        let currentFilteredData = [];
         let isRangeMode = false;
 
         let masterChartInstance = null;
@@ -295,9 +299,7 @@
                     const json = JSON.parse(jsonString);
                     parseGVizRows(json.table.rows);
                 })
-                .catch(err => {
-                    console.error("Veri çekme hatası:", err);
-                })
+                .catch(err => console.error("Veri çekme hatası:", err))
                 .finally(() => showLoading(false));
         }
 
@@ -339,20 +341,17 @@
             const startD = document.getElementById("startDate").value;
             const endD = document.getElementById("endDate").value;
 
-            let filtered = [];
             if (isRangeMode) {
                 document.getElementById("pdfDateTitle").textContent = `Tarih Aralığı: ${startD} ~ ${endD}`;
-                filtered = rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD);
+                currentFilteredData = rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD);
             } else {
                 document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${startD}`;
-                filtered = rawData.filter(item => item.dateStr === startD);
+                currentFilteredData = rawData.filter(item => item.dateStr === startD);
             }
 
-            document.getElementById("pdfPrintTime").textContent = new Date().toLocaleString("tr-TR");
-
-            renderKPIs(filtered);
-            renderCharts(filtered);
-            renderMatrixTables(filtered);
+            renderKPIs(currentFilteredData);
+            renderCharts(currentFilteredData);
+            renderMatrixTables(currentFilteredData);
         }
 
         function renderKPIs(data) {
@@ -547,9 +546,57 @@
             return "bg-rose-100 text-rose-800 font-bold";
         }
 
-        // KUSURSUZ YAZDIRMA (PDF) TETİKLEYİCİSİ
         function triggerPrint() {
             window.print();
+        }
+
+        // --- EXCEL (.XLSX) DIŞA AKTARMA FONKSİYONU ---
+        function exportToExcel() {
+            const startD = document.getElementById("startDate").value;
+            const endD = document.getElementById("endDate").value;
+            let fileName = `Fitil_Randiman_Raporu_${startD}.xlsx`;
+
+            const excelData = [];
+            excelData.push(["FİTİL MAKİNELERİ RANDIMAN RAPORU"]);
+            excelData.push([isRangeMode ? `Tarih Aralığı: ${startD} ~ ${endD}` : `Rapor Tarihi: ${startD}`]);
+            excelData.push([]); // Boş satır
+
+            excelData.push(["Fitil No", "A Vardiyası (08:00-16:00)", "B Vardiyası (16:00-24:00)", "C Vardiyası (00:00-08:00)", "Günlük Ortalaması"]);
+
+            for (let i = 1; i <= 16; i++) {
+                const machineName = `Fitil - ${i}`;
+                const mEntries = currentFilteredData.filter(d => d.machine === machineName);
+
+                let shiftA = getShiftValue(mEntries, "1. Vardiya");
+                let shiftB = getShiftValue(mEntries, "2. Vardiya");
+                let shiftC = getShiftValue(mEntries, "3. Vardiya");
+
+                const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
+                let dayAvg = validVals.length > 0 ? (validVals.reduce((a, b) => a + b, 0) / validVals.length).toFixed(1) + "%" : "-";
+
+                excelData.push([
+                    `Fitil - ${i}`,
+                    shiftA !== null ? `%${shiftA.toFixed(1)}` : "-",
+                    shiftB !== null ? `%${shiftB.toFixed(1)}` : "-",
+                    shiftC !== null ? `%${shiftC.toFixed(1)}` : "-",
+                    dayAvg
+                ]);
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+            // Sütun genişlikleri
+            ws['!cols'] = [
+                { wch: 15 },
+                { wch: 25 },
+                { wch: 25 },
+                { wch: 25 },
+                { wch: 20 }
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Randıman Raporu");
+            XLSX.writeFile(wb, fileName);
         }
 
         function showLoading(show) {
