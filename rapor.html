@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitil Randıman Raporlama Paneli</title>
+    <title>Fitil Randıman Raporlama & Analiz Paneli</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js Grafikler -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Eklentisi -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- HTML2PDF Kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -13,7 +17,6 @@
         @media print {
             .no-print { display: none !important; }
         }
-        /* PDF Özel A4 Genişlik ve Tam Doldurma Ayarları */
         #pdfContent {
             width: 790px !important;
             box-sizing: border-box;
@@ -22,17 +25,14 @@
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
 
-    <!-- Üst Bar / Header (PDF'e Yansımaz) -->
+    <!-- Üst Bar / Header -->
     <header class="bg-slate-800 text-white shadow-lg sticky top-0 z-50 no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">📊</span>
-                <h1 class="text-xl md:text-2xl font-bold">Fitil Randıman Rapor Sayfası</h1>
+                <h1 class="text-xl md:text-2xl font-bold">Fitil Randıman Raporlama & Analiz Paneli</h1>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="generatePDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
-                    📄 PDF Rapor İndir
-                </button>
                 <a href="makineler.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow">
                     🖥️ Makineler
                 </a>
@@ -45,17 +45,28 @@
 
     <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
-        <!-- Filtreleme Alanı (PDF'e Yansımaz) -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 no-print">
-            <h2 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                🔍 Tarih Seçimi ve Filtreleme
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Rapor Tarihi</label>
-                    <input type="date" id="reportDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        <!-- GENEL FİLTRELEME ALANI (Günlük veya Tarih Aralıklı) -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 no-print">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b">
+                <h2 class="text-base font-bold text-gray-700 flex items-center gap-2">
+                    🔍 Tarih Aralığı ve Filtreleme
+                </h2>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="setFilterMode('single')" id="btnSingleMode" class="px-3 py-1.5 rounded-lg font-semibold bg-indigo-600 text-white transition">Tek Günlük</button>
+                    <button onclick="setFilterMode('range')" id="btnRangeMode" class="px-3 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Tarih Aralığı</button>
                 </div>
-                <div class="flex gap-2 col-span-2">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label id="lblStartDate" class="block text-xs font-semibold text-gray-500 mb-1">Rapor Tarihi</label>
+                    <input type="date" id="startDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div id="endDateContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Bitiş Tarihi</label>
+                    <input type="date" id="endDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="flex gap-2 md:col-span-2">
                     <button onclick="applyFilters()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-5 py-2.5 rounded-lg transition">
                         Filtrele
                     </button>
@@ -66,62 +77,142 @@
             </div>
         </div>
 
-        <!-- PDF ÇIKTISI ALINACAK ALAN -->
-        <div class="flex justify-center">
-            <div id="pdfContent" class="bg-white p-8 rounded-xl border border-gray-200 space-y-6">
-                
-                <!-- PDF Başlığı -->
-                <div class="border-b-2 border-slate-800 pb-4 flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
-                        <p id="pdfDateTitle" class="text-sm font-bold text-indigo-600 mt-1"></p>
-                    </div>
-                    <div class="text-right text-xs text-gray-500 font-medium">
-                        <p>Rapor Alma Tarihi: <span id="pdfPrintTime"></span></p>
-                    </div>
-                </div>
+        <!-- KPI ÖZET KARTLARI -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">Toplam Kayıt</span>
+                <p id="kpiRecordCount" class="text-2xl font-bold text-gray-800 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">Genel Ort. Randıman</span>
+                <p id="kpiAvgEfficiency" class="text-2xl font-bold text-indigo-600 mt-1">%0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">En Yüksek Randıman</span>
+                <p id="kpiMaxEfficiency" class="text-2xl font-bold text-emerald-600 mt-1">%0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                <span class="text-xs text-gray-500 font-semibold uppercase">En Düşük Randıman</span>
+                <p id="kpiMinEfficiency" class="text-2xl font-bold text-rose-600 mt-1">%0</p>
+            </div>
+        </div>
 
-                <!-- Özet KPI Kartları -->
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider block">Toplam Kayıt</span>
-                        <p id="kpiRecordCount" class="text-xl font-black text-gray-800 mt-1">0</p>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider block">Genel Ort. Randıman</span>
-                        <p id="kpiAvgEfficiency" class="text-xl font-black text-indigo-600 mt-1">%0</p>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider block">En Yüksek Randıman</span>
-                        <p id="kpiMaxEfficiency" class="text-xl font-black text-emerald-600 mt-1">%0</p>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider block">En Düşük Randıman</span>
-                        <p id="kpiMinEfficiency" class="text-xl font-black text-rose-600 mt-1">%0</p>
-                    </div>
+        <!-- 1. GRAFİK BÖLÜMÜ: USTA & OPERATÖR PERFORMANSLARI -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
+            <!-- Usta Performans Grafiği -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    👨‍🔧 Usta Bazlı Ort. Randıman (%)
+                </h3>
+                <div class="h-72">
+                    <canvas id="masterChart"></canvas>
                 </div>
+            </div>
 
-                <!-- MATRİS TABLO FORMATI -->
-                <div>
-                    <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1.5">
-                        📋 Vardiya Bazlı Randıman Matrisi
+            <!-- Operatör Performans Grafiği (YATAY BAR & KAYDIRILABİLİR LİSTE) -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                        👷 Operatör Bazlı Randıman Sıralaması (%)
                     </h3>
-                    <table class="w-full text-center border-collapse border-2 border-slate-300 text-sm">
-                        <thead>
-                            <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
-                                <th class="border border-slate-300 py-3 px-2 w-1/5">FİTİL</th>
-                                <th class="border border-slate-300 py-3 px-2 w-1/5">A VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(08:00 - 16:00)</span></th>
-                                <th class="border border-slate-300 py-3 px-2 w-1/5">B VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(16:00 - 24:00)</span></th>
-                                <th class="border border-slate-300 py-3 px-2 w-1/5">C VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(00:00 - 08:00)</span></th>
-                                <th class="border border-slate-300 py-3 px-2 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="matrixTableBody" class="divide-y divide-gray-200">
-                            <!-- JS ile doldurulacak -->
-                        </tbody>
-                    </table>
+                    <span class="text-[11px] text-gray-400 font-normal">(Yüksekten Düşüğe)</span>
                 </div>
+                <!-- Dikey Kaydırma Kutusu -->
+                <div class="h-72 overflow-y-auto pr-2">
+                    <div id="operatorChartContainer" class="relative min-h-[280px]">
+                        <canvas id="operatorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- 2. GRAFİK BÖLÜMÜ: MAKİNE VE VARDİYA GRAFİKLERİ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    ⚡ Makine Ortalamaları (%)
+                </h3>
+                <div class="h-64">
+                    <canvas id="machineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    🕒 Vardiya Ortalamaları (%)
+                </h3>
+                <div class="h-64">
+                    <canvas id="shiftChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. ÖZEL PDF KARTI (AYRI BİR KART OLARAK MATRİS VE İNDİRME BUTONU) -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b no-print">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">📄 A4 PDF Formatında Matris Rapor Kartı</h3>
+                    <p class="text-xs text-gray-500">Aşağıdaki tablo seçili tarihteki (1-16 Fitil / A, B, C Vardiya) matrisini gösterir.</p>
+                </div>
+                <button onclick="generatePDF()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-semibold px-5 py-2.5 rounded-lg transition shadow flex items-center gap-2">
+                    <span>📄 Bu Kartı A4 PDF Olarak İndir</span>
+                </button>
+            </div>
+
+            <!-- PDF ALANI (Bu Alan İndirilir) -->
+            <div class="flex justify-center">
+                <div id="pdfContent" class="bg-white p-6 border border-gray-300 rounded-lg space-y-5">
+                    
+                    <!-- PDF Başlık -->
+                    <div class="border-b-2 border-slate-800 pb-3 flex justify-between items-end">
+                        <div>
+                            <h2 class="text-xl font-black text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
+                            <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-1"></p>
+                        </div>
+                        <div class="text-right text-[10px] text-gray-500 font-medium">
+                            <p>Oluşturulma: <span id="pdfPrintTime"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- PDF Özet -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase block">Kayıt</span>
+                            <p id="pdfKpiCount" class="text-base font-black text-gray-800 mt-0.5">0</p>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase block">Genel Ort.</span>
+                            <p id="pdfKpiAvg" class="text-base font-black text-indigo-600 mt-0.5">%0</p>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase block">En Yüksek</span>
+                            <p id="pdfKpiMax" class="text-base font-black text-emerald-600 mt-0.5">%0</p>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase block">En Düşük</span>
+                            <p id="pdfKpiMin" class="text-base font-black text-rose-600 mt-0.5">%0</p>
+                        </div>
+                    </div>
+
+                    <!-- Matris Tablo -->
+                    <div>
+                        <table class="w-full text-center border-collapse border-2 border-slate-300 text-xs">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold text-[11px] uppercase">
+                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">FİTİL</th>
+                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">A VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(08:00 - 16:00)</span></th>
+                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">B VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(16:00 - 24:00)</span></th>
+                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">C VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(00:00 - 08:00)</span></th>
+                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrixTableBody" class="divide-y divide-gray-200">
+                                <!-- JS Doldurur -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
             </div>
         </div>
 
@@ -130,12 +221,20 @@
     <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
         <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p class="font-semibold text-sm">E-Tablo Verileri Yükleniyor...</p>
+        <p class="font-semibold text-sm">Veriler Okunuyor...</p>
     </div>
 
     <script>
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
         let rawData = [];
+        let isRangeMode = false;
+
+        let masterChartInstance = null;
+        let operatorChartInstance = null;
+        let machineChartInstance = null;
+        let shiftChartInstance = null;
+
+        Chart.register(ChartDataLabels);
 
         document.addEventListener("DOMContentLoaded", function() {
             setTodayDate();
@@ -144,12 +243,34 @@
 
         function setTodayDate() {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById("reportDate").value = today;
+            document.getElementById("startDate").value = today;
+            document.getElementById("endDate").value = today;
+        }
+
+        function setFilterMode(mode) {
+            isRangeMode = (mode === 'range');
+            const btnSingle = document.getElementById("btnSingleMode");
+            const btnRange = document.getElementById("btnRangeMode");
+            const endContainer = document.getElementById("endDateContainer");
+            const lblStart = document.getElementById("lblStartDate");
+
+            if (isRangeMode) {
+                btnRange.className = "px-3 py-1.5 rounded-lg font-semibold bg-indigo-600 text-white transition";
+                btnSingle.className = "px-3 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
+                endContainer.classList.remove("hidden");
+                lblStart.textContent = "Başlangıç Tarihi";
+            } else {
+                btnSingle.className = "px-3 py-1.5 rounded-lg font-semibold bg-indigo-600 text-white transition";
+                btnRange.className = "px-3 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
+                endContainer.classList.add("hidden");
+                lblStart.textContent = "Rapor Tarihi";
+            }
+            applyFilters();
         }
 
         function resetToToday() {
             setTodayDate();
-            applyFilters();
+            setFilterMode('single');
         }
 
         function fetchGVizData() {
@@ -165,7 +286,6 @@
                 })
                 .catch(err => {
                     console.error("Veri çekme hatası:", err);
-                    alert("Veritabanı okunamadı. E-Tablo paylaşım ayarlarını kontrol edin.");
                 })
                 .finally(() => showLoading(false));
         }
@@ -205,33 +325,173 @@
         }
 
         function applyFilters() {
-            const selectedDate = document.getElementById("reportDate").value;
-            document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${selectedDate}`;
+            const startD = document.getElementById("startDate").value;
+            const endD = document.getElementById("endDate").value;
+
+            let filtered = [];
+            if (isRangeMode) {
+                document.getElementById("pdfDateTitle").textContent = `Tarih Aralığı: ${startD} ~ ${endD}`;
+                filtered = rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD);
+            } else {
+                document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${startD}`;
+                filtered = rawData.filter(item => item.dateStr === startD);
+            }
+
             document.getElementById("pdfPrintTime").textContent = new Date().toLocaleString("tr-TR");
 
-            const filteredData = rawData.filter(item => item.dateStr === selectedDate);
-
-            renderDashboard(filteredData);
-            renderMatrixTable(filteredData);
+            renderKPIs(filtered);
+            renderCharts(filtered);
+            renderMatrixTable(filtered);
         }
 
-        function renderDashboard(data) {
-            document.getElementById("kpiRecordCount").textContent = data.length;
-            if (data.length === 0) {
-                document.getElementById("kpiAvgEfficiency").textContent = "%0";
-                document.getElementById("kpiMaxEfficiency").textContent = "%0";
-                document.getElementById("kpiMinEfficiency").textContent = "%0";
+        function renderKPIs(data) {
+            const count = data.length;
+            document.getElementById("kpiRecordCount").textContent = count;
+            document.getElementById("pdfKpiCount").textContent = count;
+
+            if (count === 0) {
+                ["kpiAvgEfficiency", "kpiMaxEfficiency", "kpiMinEfficiency", "pdfKpiAvg", "pdfKpiMax", "pdfKpiMin"].forEach(id => {
+                    document.getElementById(id).textContent = "%0";
+                });
                 return;
             }
 
             const effs = data.map(d => d.efficiency);
-            const avg = (effs.reduce((a, b) => a + b, 0) / effs.length).toFixed(1);
+            const avg = (effs.reduce((a, b) => a + b, 0) / count).toFixed(1);
             const max = Math.max(...effs).toFixed(1);
             const min = Math.min(...effs).toFixed(1);
 
             document.getElementById("kpiAvgEfficiency").textContent = `%${avg}`;
             document.getElementById("kpiMaxEfficiency").textContent = `%${max}`;
             document.getElementById("kpiMinEfficiency").textContent = `%${min}`;
+
+            document.getElementById("pdfKpiAvg").textContent = `%${avg}`;
+            document.getElementById("pdfKpiMax").textContent = `%${max}`;
+            document.getElementById("pdfKpiMin").textContent = `%${min}`;
+        }
+
+        function renderCharts(data) {
+            // Usta Grafiği
+            const masterMap = groupByAverage(data, 'master');
+            masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
+
+            // Operatör Grafiği (YATAY VE SIRALI)
+            const opMap = groupByAverage(data, 'operator');
+            // Yüksek randımandan düşüğe doğru sırala
+            const sortedOperators = Object.keys(opMap).sort((a,b) => parseFloat(opMap[b]) - parseFloat(opMap[a]));
+            const sortedValues = sortedOperators.map(k => opMap[k]);
+
+            operatorChartInstance = createHorizontalBarChart('operatorChart', operatorChartInstance, sortedOperators, sortedValues, 'Operatör Randımanı (%)', '#10b981');
+
+            // Makine Grafiği
+            const mData = [];
+            const mLabels = [];
+            for(let i=1; i<=16; i++){
+                const mName = `Fitil - ${i}`;
+                mLabels.push(`${i}`);
+                const match = data.filter(d => d.machine === mName);
+                if(match.length > 0) {
+                    const avg = match.reduce((a,b)=>a+b.efficiency,0)/match.length;
+                    mData.push(avg.toFixed(1));
+                } else {
+                    mData.push(0);
+                }
+            }
+            machineChartInstance = createBarChart('machineChart', machineChartInstance, mLabels, mData, 'Makine Randımanı (%)', '#f59e0b');
+
+            // Vardiya Grafiği
+            const shiftMap = groupByAverage(data, 'shift');
+            shiftChartInstance = createBarChart('shiftChart', shiftChartInstance, Object.keys(shiftMap), Object.values(shiftMap), 'Vardiya Randımanı (%)', '#8b5cf6');
+        }
+
+        function groupByAverage(data, key) {
+            const map = {};
+            const counts = {};
+            data.forEach(d => {
+                const val = d[key] || 'Belirtilmemiş';
+                map[val] = (map[val] || 0) + d.efficiency;
+                counts[val] = (counts[val] || 0) + 1;
+            });
+            const result = {};
+            Object.keys(map).forEach(k => {
+                result[k] = (map[k] / counts[k]).toFixed(1);
+            });
+            return result;
+        }
+
+        function createBarChart(canvasId, instance, labels, data, label, color) {
+            if (instance) instance.destroy();
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: color,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (val) => val > 0 ? `%${val}` : '',
+                            font: { weight: 'bold', size: 10 }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        // OPERATÖRLER İÇİN ÖZEL YATAY BAR GRAFİĞİ HESAPLAMA
+        function createHorizontalBarChart(canvasId, instance, labels, data, label, color) {
+            if (instance) instance.destroy();
+
+            const container = document.getElementById("operatorChartContainer");
+            // Operatör sayısına göre dinamik yükseklik belirle (Her operatör için 32px)
+            const calcHeight = Math.max(280, labels.length * 32);
+            container.style.height = `${calcHeight}px`;
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: color,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Grafiği Yatay Yapar
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            formatter: (val) => val > 0 ? `%${val}` : '',
+                            font: { weight: 'bold', size: 10 }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, max: 105 }
+                    }
+                }
+            });
         }
 
         function renderMatrixTable(data) {
@@ -286,11 +546,11 @@
 
         function generatePDF() {
             const element = document.getElementById("pdfContent");
-            const selectedDate = document.getElementById("reportDate").value;
+            const startD = document.getElementById("startDate").value;
 
             const opt = {
                 margin:       [8, 8, 8, 8],
-                filename:     `Fitil_Randiman_Raporu_${selectedDate}.pdf`,
+                filename:     `Fitil_Randiman_Raporu_${startD}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
