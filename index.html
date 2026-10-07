@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitil Randıman Veri Giriş Paneli</title>
+    <title>Fitil Randıman Paneli - Giriş</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -17,113 +17,211 @@
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
 
-    <!-- Üst Bar / Header -->
-    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">📝</span>
-                <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Veri Giriş Paneli</h1>
+    <!-- LOGIN EKRANI (Giriş Yapılmamışsa Görünür) -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center px-4">
+        <div class="glass-card p-8 rounded-2xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <span class="text-4xl">🔐</span>
+                <h2 class="text-xl font-bold text-slate-800 mt-2">Sisteme Giriş Yapın</h2>
+                <p class="text-xs text-gray-500 mt-1">Lütfen kullanıcı adı ve şifrenizi girin</p>
             </div>
-            <!-- DOĞRUDAN SAYFA GEÇİŞ BUTONLARI -->
-            <div class="flex items-center gap-2">
-                <a href="makineler.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
-                    🖥️ Makineler
-                </a>
-                <a href="rapor.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
-                    📊 Raporlar
-                </a>
-            </div>
-        </div>
-    </header>
 
-    <div class="max-w-3xl mx-auto px-4 mt-8 space-y-6">
-
-        <!-- VERİ GİRİŞ FORMU -->
-        <div class="glass-card p-6 md:p-8 rounded-2xl">
-            <h2 class="text-lg font-bold text-slate-800 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
-                📌 Randıman Kayıt Formu
-            </h2>
-
-            <form id="entryForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Tarih</label>
-                        <input type="date" id="inputDate" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Saat</label>
-                        <input type="time" id="inputTime" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Kullanıcı Adı</label>
+                    <input type="text" id="loginUsername" required placeholder="Kullanıcı adınız..." class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Seçimi</label>
-                        <select id="selectShift" onchange="checkShiftDateAdjustment()" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="">Vardiya Seçiniz</option>
-                            <option value="1. Vardiya (08:00 - 16:00)">1. Vardiya (08:00 - 16:00)</option>
-                            <option value="2. Vardiya (16:00 - 24:00)">2. Vardiya (16:00 - 24:00)</option>
-                            <option value="3. Vardiya (00:00 - 08:00)">3. Vardiya (00:00 - 08:00)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Ustası</label>
-                        <input type="text" id="inputMaster" placeholder="Usta Adı Soyadı" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Şifre</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Fitil Makinesi</label>
-                        <select id="selectMachine" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="">Makine Seçiniz</option>
-                            <!-- 1-16 Fitil Makineleri -->
-                            <script>
-                                for(let i=1; i<=16; i++) {
-                                    document.write(`<option value="Fitil - ${i}">Fitil - ${i}</option>`);
-                                }
-                            </script>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Operatör</label>
-                        <input type="text" id="inputOperator" placeholder="Operatör Adı Soyadı" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Randıman (%)</label>
-                        <input type="number" step="0.1" min="0" max="100" id="inputEfficiency" placeholder="Örn: 85.5" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Açıklama / Not (İsteğe Bağlı)</label>
-                        <input type="text" id="inputDescription" placeholder="Varsa arıza veya not..." class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="pt-4">
-                    <button type="submit" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
-                        <span>💾 Kaydet ve E-Tablo'ya Gönder</span>
-                    </button>
-                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-md">
+                    Giriş Yap
+                </button>
             </form>
         </div>
+    </div>
 
+    <!-- ANA PANEL (Giriş Yapılınca Görünür) -->
+    <div id="appSection" class="hidden">
+        
+        <!-- Üst Bar / Header -->
+        <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📝</span>
+                    <div>
+                        <h1 class="text-lg md:text-xl font-bold tracking-tight">Fitil Veri Giriş Paneli</h1>
+                        <p class="text-[11px] text-indigo-300">Giriş Yapan: <span id="currentUserSpan" class="font-bold text-white"></span> (<span id="userRoleSpan" class="text-emerald-400"></span>)</p>
+                    </div>
+                </div>
+                <!-- DİNAMİK YETKİ BUTONLARI -->
+                <div class="flex items-center gap-2">
+                    <a id="navMakineler" href="makineler.html" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                        🖥️ Makineler
+                    </a>
+                    <a id="navRaporlar" href="rapor.html" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                        📊 Raporlar
+                    </a>
+                    <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                        🚪 Çıkış Yap
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-3xl mx-auto px-4 mt-8 space-y-6">
+
+            <!-- VERİ GİRİŞ FORMU -->
+            <div class="glass-card p-6 md:p-8 rounded-2xl">
+                <h2 class="text-lg font-bold text-slate-800 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
+                    📌 Randıman Kayıt Formu
+                </h2>
+
+                <form id="entryForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Tarih</label>
+                            <input type="date" id="inputDate" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Saat</label>
+                            <input type="time" id="inputTime" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Seçimi</label>
+                            <select id="selectShift" onchange="checkShiftDateAdjustment()" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="">Vardiya Seçiniz</option>
+                                <option value="1. Vardiya (08:00 - 16:00)">1. Vardiya (08:00 - 16:00)</option>
+                                <option value="2. Vardiya (16:00 - 24:00)">2. Vardiya (16:00 - 24:00)</option>
+                                <option value="3. Vardiya (00:00 - 08:00)">3. Vardiya (00:00 - 08:00)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Ustası (Otomatik Kilitli)</label>
+                            <!-- Otomatik Giriş Yapan Ustanın Adı Gelecek -->
+                            <input type="text" id="inputMaster" readonly required class="w-full border border-gray-200 bg-gray-100 font-bold text-indigo-700 rounded-xl p-2.5 text-sm cursor-not-allowed">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Fitil Makinesi</label>
+                            <select id="selectMachine" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="">Makine Seçiniz</option>
+                                <script>
+                                    for(let i=1; i<=16; i++) {
+                                        document.write(`<option value="Fitil - ${i}">Fitil - ${i}</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Operatör</label>
+                            <input type="text" id="inputOperator" placeholder="Operatör Adı Soyadı" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Randıman (%)</label>
+                            <input type="number" step="0.1" min="0" max="100" id="inputEfficiency" placeholder="Örn: 85.5" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Açıklama / Not (İsteğe Bağlı)</label>
+                            <input type="text" id="inputDescription" placeholder="Varsa arıza veya not..." class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+                            <span>💾 Kaydet ve E-Tablo'ya Gönder</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
 
     <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50 hidden">
         <div class="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p id="loadingText" class="font-semibold text-base">Veri Kaydediliyor...</p>
+        <p id="loadingText" class="font-semibold text-base">İşlem Yapılıyor...</p>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwt3X5x7l3H2YdF3A-8t-zL7G-Pj-L_9a8X9X9/exec";
 
+        // KULLANICI LİSTESİ VE YETKİLERİ (Buraları Dilediğiniz Gibi Düzenleyebilirsiniz)
+        const USERS = [
+            { username: "admin", password: "123", name: "Sistem Yöneticisi", role: "admin" },
+            { username: "usta1", password: "123", name: "Ahmet Usta", role: "usta" },
+            { username: "usta2", password: "123", name: "Mehmet Usta", role: "usta" },
+            { username: "usta3", password: "123", name: "Ali Usta", role: "usta" }
+        ];
+
+        let currentUser = null;
+
         document.addEventListener("DOMContentLoaded", function() {
-            setInitialDateTime();
+            checkSession();
         });
+
+        function checkSession() {
+            const savedUser = localStorage.getItem("fitil_active_user");
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                setupPanel();
+            } else {
+                document.getElementById("loginSection").classList.remove("hidden");
+                document.getElementById("appSection").classList.add("hidden");
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById("loginUsername").value.trim().toLowerCase();
+            const pInput = document.getElementById("loginPassword").value;
+
+            const user = USERS.find(u => u.username.toLowerCase() === uInput && u.password === pInput);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem("fitil_active_user", JSON.stringify(user));
+                setupPanel();
+            } else {
+                alert("❌ Hatalı Kullanıcı Adı veya Şifre!");
+            }
+        }
+
+        function setupPanel() {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("appSection").classList.remove("hidden");
+
+            document.getElementById("currentUserSpan").textContent = currentUser.name;
+            document.getElementById("userRoleSpan").textContent = currentUser.role === 'admin' ? 'Yönetici' : 'Vardiya Ustası';
+            document.getElementById("inputMaster").value = currentUser.name;
+
+            // Rol Bazlı Yetkilendirme
+            if (currentUser.role === 'admin') {
+                document.getElementById("navMakineler").classList.remove("hidden");
+                document.getElementById("navRaporlar").classList.remove("hidden");
+            } else {
+                document.getElementById("navMakineler").classList.add("hidden");
+                document.getElementById("navRaporlar").classList.add("hidden");
+            }
+
+            setInitialDateTime();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("fitil_active_user");
+            currentUser = null;
+            location.reload();
+        }
 
         function setInitialDateTime() {
             const now = new Date();
@@ -161,7 +259,7 @@
                 date: document.getElementById("inputDate").value,
                 time: document.getElementById("inputTime").value,
                 shift: document.getElementById("selectShift").value,
-                master: document.getElementById("inputMaster").value,
+                master: currentUser.name, // Giriş Yapan Ustanın Adı
                 machine: document.getElementById("selectMachine").value,
                 operator: document.getElementById("inputOperator").value,
                 efficiency: document.getElementById("inputEfficiency").value,
@@ -178,6 +276,7 @@
                 showLoading(false);
                 alert("✅ Veri başarıyla kaydedildi!");
                 document.getElementById("entryForm").reset();
+                document.getElementById("inputMaster").value = currentUser.name;
                 setInitialDateTime();
             })
             .catch(err => {
