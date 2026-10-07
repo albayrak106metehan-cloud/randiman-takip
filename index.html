@@ -75,10 +75,16 @@
 
         <div class="max-w-4xl mx-auto px-4 mt-8 space-y-6">
             <!-- KAYIT FORMU -->
-            <div class="glass-card p-6 md:p-8 rounded-2xl">
+            <div class="glass-card p-6 md:p-8 rounded-2xl relative">
                 <h2 class="text-lg font-bold text-slate-800 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
                     📌 Randıman Kayıt Formu
                 </h2>
+
+                <!-- Şık Başarı Bildirim Alanı (Alert Yerine Geçer) -->
+                <div id="successBanner" class="hidden mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all">
+                    <span>✅</span>
+                    <span id="successMessage">Veri başarıyla kaydedildi ve listeye eklendi!</span>
+                </div>
 
                 <form id="entryForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -311,12 +317,15 @@
             })
             .then(() => {
                 showLoading(false);
-                alert("✅ Veri başarıyla kaydedildi!");
+                
+                // Alert yerine şık üst banner göster
+                showSuccessBanner("Veri başarıyla kaydedildi ve alt listeye eklendi!");
+
                 document.getElementById("entryForm").reset();
                 document.getElementById("inputMaster").value = currentUser.name;
                 setInitialDateTime();
                 
-                // Google Sheets'in veriyi işlemesi için biraz daha uzun bekleyip listeyi yenile
+                // Google Sheets'in veriyi işlemesi için bekleyip listeyi yenile
                 setTimeout(fetchUserLogs, 2500);
             })
             .catch(err => {
@@ -324,6 +333,17 @@
                 showLoading(false);
                 alert("❌ Kayıt sırasında bir hata oluştu.");
             });
+        }
+
+        function showSuccessBanner(msg) {
+            const banner = document.getElementById("successBanner");
+            document.getElementById("successMessage").textContent = msg;
+            banner.classList.remove("hidden");
+            
+            // 4 saniye sonra otomatik gizle
+            setTimeout(() => {
+                banner.classList.add("hidden");
+            }, 4000);
         }
 
         function fetchUserLogs() {
@@ -362,7 +382,6 @@
                         const currentUName = currentUser.username.toLowerCase();
                         const currentMName = currentUser.name.toLowerCase();
 
-                        // Kullanıcı adı veya usta adına göre eşleşen kayıtları al
                         if (recordUser === currentUName || recordMaster === currentMName) {
                             userEntries.push({
                                 dateStr: String(rawDate).split('T')[0],
@@ -385,7 +404,6 @@
                 return;
             }
 
-            // En son girilenler en üstte olacak şekilde ters çevir ve son 10 kaydı göster
             userEntries.reverse().slice(0, 10).forEach(item => {
                 let badgeClass = "text-emerald-600 bg-emerald-50";
                 if (item.efficiency < 60) badgeClass = "text-rose-600 bg-rose-50";
