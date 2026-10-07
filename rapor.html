@@ -4,26 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitil Randıman Raporlama Paneli</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js Grafikler -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js DataLabels Eklentisi -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- HTML2PDF Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-color: #f8fafc; }
+        @media print {
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
 
-    <!-- Üst Bar / Header -->
-    <header class="bg-slate-800 text-white shadow-lg sticky top-0 z-50">
+    <!-- Üst Bar / Header (PDF'e Yansımaz) -->
+    <header class="bg-slate-800 text-white shadow-lg sticky top-0 z-50 no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">📊</span>
                 <h1 class="text-xl md:text-2xl font-bold">Fitil Randıman Rapor Sayfası</h1>
             </div>
             <div class="flex items-center gap-2">
+                <button onclick="generatePDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
+                    📄 PDF Rapor İndir
+                </button>
                 <a href="makineler.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow">
                     🖥️ Makineler
                 </a>
@@ -36,132 +40,112 @@
 
     <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
-        <!-- Filtreleme Alanı -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <!-- Filtreleme Alanı (PDF'e Yansımaz) -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 no-print">
             <h2 class="text-base font-bold text-gray-700 mb-4 flex items-center gap-2">
-                🔍 Tarih ve Vardiya Filtresi
+                🔍 Tarih Seçimi ve Filtreleme
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Başlangıç Tarihi</label>
-                    <input type="date" id="startDate" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Rapor Tarihi</label>
+                    <input type="date" id="reportDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Bitiş Tarihi</label>
-                    <input type="date" id="endDate" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Filtresi</label>
-                    <select id="filterShift" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="ALL">Tüm Vardiyalar</option>
-                        <option value="1. Vardiya (08:00 - 16:00)">1. Vardiya (08:00 - 16:00)</option>
-                        <option value="2. Vardiya (16:00 - 24:00)">2. Vardiya (16:00 - 24:00)</option>
-                        <option value="3. Vardiya (00:00 - 08:00)">3. Vardiya (00:00 - 08:00)</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="applyFilters()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
-                        Filtrele & Analiz Et
+                <div class="flex gap-2 col-span-2">
+                    <button onclick="applyFilters()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                        Filtrele
                     </button>
-                    <button onclick="resetFilters()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-                        Sıfırla
+                    <button onclick="resetToToday()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+                        Bugüne Dön
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Özet KPI Kartları -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
-                <span class="text-xs text-gray-500 font-semibold uppercase">Toplam Kayıt</span>
-                <p id="kpiRecordCount" class="text-2xl font-bold text-gray-800 mt-1">0</p>
+        <!-- PDF ÇIKTISI ALINACAK ALAN -->
+        <div id="pdfContent" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
+            
+            <!-- PDF Başlığı -->
+            <div class="border-b pb-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
+                    <p id="pdfDateTitle" class="text-sm font-medium text-indigo-600 mt-1"></p>
+                </div>
+                <div class="text-right text-xs text-gray-400">
+                    <p>Oluşturulma Tarihi: <span id="pdfPrintTime"></span></p>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
-                <span class="text-xs text-gray-500 font-semibold uppercase">Genel Ort. Randıman</span>
-                <p id="kpiAvgEfficiency" class="text-2xl font-bold text-indigo-600 mt-1">%0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
-                <span class="text-xs text-gray-500 font-semibold uppercase">En Yüksek Randıman</span>
-                <p id="kpiMaxEfficiency" class="text-2xl font-bold text-emerald-600 mt-1">%0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
-                <span class="text-xs text-gray-500 font-semibold uppercase">En Düşük Randıman</span>
-                <p id="kpiMinEfficiency" class="text-2xl font-bold text-rose-600 mt-1">%0</p>
-            </div>
-        </div>
 
-        <!-- Grafikler Satırı 1 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-md font-bold text-gray-700 mb-4">⚙️ Makine Bazlı Ortalama Randıman</h3>
-                <div class="h-72"><canvas id="chartMachines"></canvas></div>
+            <!-- Özet KPI Kartları -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-slate-50 p-3 rounded-lg border text-center">
+                    <span class="text-[11px] text-gray-500 font-semibold uppercase">Toplam Kayıt</span>
+                    <p id="kpiRecordCount" class="text-xl font-bold text-gray-800 mt-0.5">0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border text-center">
+                    <span class="text-[11px] text-gray-500 font-semibold uppercase">Genel Ort. Randıman</span>
+                    <p id="kpiAvgEfficiency" class="text-xl font-bold text-indigo-600 mt-0.5">%0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border text-center">
+                    <span class="text-[11px] text-gray-500 font-semibold uppercase">En Yüksek Randıman</span>
+                    <p id="kpiMaxEfficiency" class="text-xl font-bold text-emerald-600 mt-0.5">%0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border text-center">
+                    <span class="text-[11px] text-gray-500 font-semibold uppercase">En Düşük Randıman</span>
+                    <p id="kpiMinEfficiency" class="text-xl font-bold text-rose-600 mt-0.5">%0</p>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-md font-bold text-gray-700 mb-4">🕒 Vardiya Bazlı Ortalama Randıman</h3>
-                <div class="h-72"><canvas id="chartShifts"></canvas></div>
-            </div>
-        </div>
 
-        <!-- Grafikler Satırı 2 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-md font-bold text-gray-700 mb-4">👨‍✈️ Vardiya Ustaları Performansı</h3>
-                <div class="h-72"><canvas id="chartMasters"></canvas></div>
+            <!-- MATRİS TABLO FORMATI (1-16 Fitil vs A, B, C Vardiyaları) -->
+            <div>
+                <h3 class="text-base font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    📋 Vardiya Bazlı Randıman Matrisi
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center border-collapse border border-gray-300 text-sm">
+                        <thead>
+                            <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
+                                <th class="border border-gray-300 p-2.5 w-1/5">FİTİL</th>
+                                <th class="border border-gray-300 p-2.5 w-1/5">A VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(08:00 - 16:00)</span></th>
+                                <th class="border border-gray-300 p-2.5 w-1/5">B VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(16:00 - 24:00)</span></th>
+                                <th class="border border-gray-300 p-2.5 w-1/5">C VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(00:00 - 08:00)</span></th>
+                                <th class="border border-gray-300 p-2.5 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixTableBody" class="divide-y divide-gray-200">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-md font-bold text-gray-700 mb-4">👷 Operatör Verimlilik Ortalamaları</h3>
-                <div class="h-72"><canvas id="chartOperators"></canvas></div>
-            </div>
-        </div>
 
-        <!-- E-Tablo Canlı Kayıt Tablosu -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-700 mb-4 pb-2 border-b flex justify-between items-center">
-                <span>📋 Veritabanındaki Filtrelenmiş Tüm Kayıtlar</span>
-                <span class="text-xs text-gray-500 font-normal">Google E-Tablo'dan Canlı Çekildi</span>
-            </h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
-                        <tr>
-                            <th class="p-3">Tarih</th>
-                            <th class="p-3">Saat</th>
-                            <th class="p-3">Vardiya</th>
-                            <th class="p-3">Usta</th>
-                            <th class="p-3">Makine</th>
-                            <th class="p-3">Operatör</th>
-                            <th class="p-3">Randıman</th>
-                            <th class="p-3">Açıklama</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTableBody" class="divide-y divide-gray-100">
-                        <tr>
-                            <td colspan="8" class="p-4 text-center text-gray-400">Yükleniyor...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
 
     </div>
 
-    <!-- Yükleniyor Ekranı -->
+    <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
         <div class="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p class="font-semibold text-lg">Google E-Tablo Veritabanı Okunuyor...</p>
+        <p class="font-semibold text-lg">Google E-Tablo Verileri Yükleniyor...</p>
     </div>
 
     <script>
-        Chart.register(ChartDataLabels);
-
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
-
         let rawData = [];
-        let chartInstances = {};
 
         document.addEventListener("DOMContentLoaded", function() {
+            setTodayDate();
             fetchGVizData();
         });
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("reportDate").value = today;
+        }
+
+        function resetToToday() {
+            setTodayDate();
+            applyFilters();
+        }
 
         function fetchGVizData() {
             showLoading(true);
@@ -176,78 +160,54 @@
                 })
                 .catch(err => {
                     console.error("Veri çekme hatası:", err);
-                    alert("Google E-Tablo'dan veriler çekilemedi.");
+                    alert("Veritabanı okunamadı. E-Tablo paylaşım ayarlarını kontrol edin.");
                 })
                 .finally(() => showLoading(false));
         }
 
         function parseGVizRows(rows) {
             rawData = [];
-            if (!rows) {
-                renderDashboard([]);
-                return;
-            }
-
-            rows.forEach(r => {
-                const c = r.c;
-                if (c && c[0] && c[0].v !== null && c[0].v !== undefined) {
-                    let rawDate = c[0].f || c[0].v;
-                    if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
-                        const dateParts = rawDate.match(/\d+/g);
-                        if (dateParts) {
-                            const year = dateParts[0];
-                            const month = String(parseInt(dateParts[1]) + 1).padStart(2, '0');
-                            const day = String(dateParts[2]).padStart(2, '0');
-                            rawDate = `${year}-${month}-${day}`;
+            if (rows) {
+                rows.forEach(r => {
+                    const c = r.c;
+                    if (c && c[0] && c[0].v !== null && c[0].v !== undefined) {
+                        let rawDate = c[0].f || c[0].v;
+                        if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
+                            const dateParts = rawDate.match(/\d+/g);
+                            if (dateParts) {
+                                const year = dateParts[0];
+                                const month = String(parseInt(dateParts[1]) + 1).padStart(2, '0');
+                                const day = String(dateParts[2]).padStart(2, '0');
+                                rawDate = `${year}-${month}-${day}`;
+                            }
                         }
+
+                        rawData.push({
+                            dateStr: String(rawDate).split('T')[0],
+                            timeStr: c[1] ? c[1].v : "-",
+                            shift: c[2] ? c[2].v : "-",
+                            master: c[3] ? c[3].v : "-",
+                            machine: c[4] ? c[4].v : "-",
+                            operator: c[5] ? c[5].v : "-",
+                            efficiency: c[6] ? parseFloat(c[6].v) || 0 : 0,
+                            description: c[7] ? c[7].v : "-"
+                        });
                     }
-
-                    rawData.push({
-                        dateStr: String(rawDate).split('T')[0],
-                        timeStr: c[1] ? c[1].v : "-",
-                        shift: c[2] ? c[2].v : "-",
-                        master: c[3] ? c[3].v : "-",
-                        machine: c[4] ? c[4].v : "-",
-                        operator: c[5] ? c[5].v : "-",
-                        efficiency: c[6] ? parseFloat(c[6].v) || 0 : 0,
-                        description: c[7] ? c[7].v : "-"
-                    });
-                }
-            });
-
-            setDefaultDates();
-            applyFilters();
-        }
-
-        function setDefaultDates() {
-            if (!rawData || rawData.length === 0) return;
-            const dates = rawData.map(d => d.dateStr).filter(Boolean).sort();
-            if (dates.length > 0) {
-                document.getElementById("startDate").value = dates[0];
-                document.getElementById("endDate").value = dates[dates.length - 1];
+                });
             }
+
+            applyFilters();
         }
 
         function applyFilters() {
-            const start = document.getElementById("startDate").value;
-            const end = document.getElementById("endDate").value;
-            const shift = document.getElementById("filterShift").value;
+            const selectedDate = document.getElementById("reportDate").value;
+            document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${selectedDate}`;
+            document.getElementById("pdfPrintTime").textContent = new Date().toLocaleString("tr-TR");
 
-            const filtered = rawData.filter(item => {
-                const matchStart = start ? item.dateStr >= start : true;
-                const matchEnd = end ? item.dateStr <= end : true;
-                const matchShift = shift !== "ALL" ? item.shift === shift : true;
-                return matchStart && matchEnd && matchShift;
-            });
+            const filteredData = rawData.filter(item => item.dateStr === selectedDate);
 
-            renderDashboard(filtered);
-            renderTable(filtered);
-        }
-
-        function resetFilters() {
-            document.getElementById("filterShift").value = "ALL";
-            setDefaultDates();
-            applyFilters();
+            renderDashboard(filteredData);
+            renderMatrixTable(filteredData);
         }
 
         function renderDashboard(data) {
@@ -256,7 +216,6 @@
                 document.getElementById("kpiAvgEfficiency").textContent = "%0";
                 document.getElementById("kpiMaxEfficiency").textContent = "%0";
                 document.getElementById("kpiMinEfficiency").textContent = "%0";
-                destroyCharts();
                 return;
             }
 
@@ -268,121 +227,71 @@
             document.getElementById("kpiAvgEfficiency").textContent = `%${avg}`;
             document.getElementById("kpiMaxEfficiency").textContent = `%${max}`;
             document.getElementById("kpiMinEfficiency").textContent = `%${min}`;
-
-            const machineData = groupAverage(data, "machine");
-            const shiftData = groupAverage(data, "shift");
-            const masterData = groupAverage(data, "master");
-            const operatorData = groupAverage(data, "operator");
-
-            buildBarChart("chartMachines", Object.keys(machineData), Object.values(machineData), "Makine Randımanı (%)", "#6366f1");
-            buildBarChart("chartShifts", Object.keys(shiftData), Object.values(shiftData), "Vardiya Ortalaması (%)", "#0ea5e9");
-            buildBarChart("chartMasters", Object.keys(masterData), Object.values(masterData), "Usta Ortalaması (%)", "#8b5cf6");
-            buildBarChart("chartOperators", Object.keys(operatorData), Object.values(operatorData), "Operatör Ortalaması (%)", "#10b981");
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById("dataTableBody");
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400">Filtreye uygun kayıt bulunamadı.</td></tr>`;
-                return;
-            }
-
+        function renderMatrixTable(data) {
+            const tbody = document.getElementById("matrixTableBody");
             tbody.innerHTML = "";
-            data.forEach(r => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-gray-50 transition border-b border-gray-100";
 
-                // YENİ RENK KURALI (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
-                let effBadgeClass = "bg-green-100 text-green-700";
-                if (r.efficiency < 60) effBadgeClass = "bg-red-100 text-red-700";
-                else if (r.efficiency < 70) effBadgeClass = "bg-yellow-100 text-yellow-700";
+            for (let i = 1; i <= 16; i++) {
+                const machineName = `Fitil - ${i}`;
+                const mEntries = data.filter(d => d.machine === machineName);
+
+                let shiftA = getShiftValue(mEntries, "1. Vardiya");
+                let shiftB = getShiftValue(mEntries, "2. Vardiya");
+                let shiftC = getShiftValue(mEntries, "3. Vardiya");
+
+                const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
+                let dayAvgText = "-";
+                let dayAvgVal = 0;
+                if (validVals.length > 0) {
+                    dayAvgVal = validVals.reduce((a, b) => a + b, 0) / validVals.length;
+                    dayAvgText = `%${dayAvgVal.toFixed(1)}`;
+                }
+
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50 font-medium";
 
                 tr.innerHTML = `
-                    <td class="p-3 font-medium">${r.dateStr}</td>
-                    <td class="p-3 text-xs text-gray-500">${r.timeStr}</td>
-                    <td class="p-3 text-xs text-gray-600">${r.shift}</td>
-                    <td class="p-3 font-medium text-indigo-700">${r.master}</td>
-                    <td class="p-3 font-semibold text-gray-800">${r.machine}</td>
-                    <td class="p-3 text-gray-600">${r.operator}</td>
-                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${effBadgeClass}">%${r.efficiency}</span></td>
-                    <td class="p-3 text-xs text-gray-500">${r.description}</td>
+                    <td class="border border-gray-300 p-2 font-bold bg-slate-100 text-slate-800">${i}</td>
+                    <td class="border border-gray-300 p-2 ${getBgClass(shiftA)}">${formatValue(shiftA)}</td>
+                    <td class="border border-gray-300 p-2 ${getBgClass(shiftB)}">${formatValue(shiftB)}</td>
+                    <td class="border border-gray-300 p-2 ${getBgClass(shiftC)}">${formatValue(shiftC)}</td>
+                    <td class="border border-gray-300 p-2 font-bold ${getBgClass(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
                 `;
                 tbody.appendChild(tr);
-            });
-        }
-
-        function groupAverage(data, key) {
-            const totals = {};
-            const counts = {};
-
-            data.forEach(item => {
-                const label = item[key] || "Tanımsız";
-                totals[label] = (totals[label] || 0) + item.efficiency;
-                counts[label] = (counts[label] || 0) + 1;
-            });
-
-            const result = {};
-            Object.keys(totals).forEach(label => {
-                result[label] = (totals[label] / counts[label]).toFixed(1);
-            });
-            return result;
-        }
-
-        function buildBarChart(canvasId, labels, dataValues, datasetLabel, color) {
-            if (chartInstances[canvasId]) {
-                chartInstances[canvasId].destroy();
             }
-
-            const ctx = document.getElementById(canvasId).getContext("2d");
-            chartInstances[canvasId] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: datasetLabel,
-                        data: dataValues,
-                        backgroundColor: color + "bb",
-                        borderColor: color,
-                        borderWidth: 1,
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            top: 25
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 110,
-                            ticks: { callback: value => '%' + value }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'end',
-                            formatter: (value) => '%' + value,
-                            font: {
-                                weight: 'bold',
-                                size: 11
-                            },
-                            color: '#334155'
-                        }
-                    }
-                }
-            });
         }
 
-        function destroyCharts() {
-            Object.keys(chartInstances).forEach(key => {
-                if (chartInstances[key]) chartInstances[key].destroy();
-            });
+        function getShiftValue(entries, shiftKeyword) {
+            const match = entries.filter(e => e.shift.includes(shiftKeyword));
+            return match.length > 0 ? match[match.length - 1].efficiency : null;
+        }
+
+        function formatValue(val) {
+            return val !== null ? `%${val.toFixed(1)}` : "-";
+        }
+
+        function getBgClass(val, isEmpty = false) {
+            if (val === null || isEmpty) return "text-gray-400";
+            if (val >= 70) return "bg-green-100 text-green-800 font-bold";
+            if (val >= 60) return "bg-yellow-100 text-yellow-800 font-bold";
+            return "bg-red-100 text-red-800 font-bold";
+        }
+
+        function generatePDF() {
+            const element = document.getElementById("pdfContent");
+            const selectedDate = document.getElementById("reportDate").value;
+
+            const opt = {
+                margin:       [10, 10, 10, 10],
+                filename:     `Fitil_Randiman_Raporu_${selectedDate}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
         }
 
         function showLoading(show) {
