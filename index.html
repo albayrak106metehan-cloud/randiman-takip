@@ -24,14 +24,14 @@
                 <span class="text-2xl">📝</span>
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Veri Giriş Paneli</h1>
             </div>
-            <!-- ŞİFRE KORUMALI SAYFA GEÇİŞ BUTONLARI -->
+            <!-- DOĞRUDAN SAYFA GEÇİŞ BUTONLARI -->
             <div class="flex items-center gap-2">
-                <button onclick="protectedNavigate('makineler.html')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
-                    🔒 🖥️ Makineler
-                </button>
-                <button onclick="protectedNavigate('rapor.html')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
-                    🔒 📊 Raporlar
-                </button>
+                <a href="makineler.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
+                    🖥️ Makineler
+                </a>
+                <a href="rapor.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
+                    📊 Raporlar
+                </a>
             </div>
         </div>
     </header>
@@ -120,9 +120,6 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwt3X5x7l3H2YdF3A-8t-zL7G-Pj-L_9a8X9X9/exec";
-        
-        // YÖNETİCİ ŞİFRESİ
-        const YONETICI_SIFRESI = "Albayrak1881";
 
         document.addEventListener("DOMContentLoaded", function() {
             setInitialDateTime();
@@ -153,16 +150,6 @@
                 const day = String(currentDate.getDate()).padStart(2, '0');
 
                 dateInput.value = `${year}-${month}-${day}`;
-            }
-        }
-
-        function protectedNavigate(targetUrl) {
-            const enteredPassword = prompt("Bu sayfaya erişim kısıtlıdır.\nLütfen Yönetici Şifresini Giriniz:");
-
-            if (enteredPassword === YONETICI_SIFRESI) {
-                window.location.href = targetUrl;
-            } else if (enteredPassword !== null) {
-                alert("❌ Hatalı Şifre! Yetkiniz bulunmamaktadır.");
             }
         }
 
