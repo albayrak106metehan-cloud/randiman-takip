@@ -10,51 +10,52 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js DataLabels Eklentisi -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <!-- HTML2PDF Kütüphanesi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-color: #f8fafc; }
         
-        /* Ekran Tasarımı Şıklığı İçin Özel Dokunuşlar */
         .glass-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
-        /* PDF Çıktısı İçin Arka Plan Hazırlık Kutusu */
-        #pdfPrintHiddenArea {
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-            width: 750px;
-            background: #ffffff;
-            padding: 24px;
-            font-family: Arial, sans-serif;
-        }
+        /* YAZDIRMA (PDF) ÖZEL STİLLERİ - ASLA BOŞ SAYFA GELMEZ */
+        @media print {
+            /* Yazdırılırken görünmeyecek alanlar */
+            header, .no-print, #loadingOverlay {
+                display: none !important;
+            }
 
-        .pdf-table-clean {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        .pdf-table-clean th, .pdf-table-clean td {
-            border: 1px solid #cbd5e1;
-            padding: 8px 4px;
-            text-align: center;
-            font-size: 11px;
-        }
-        .pdf-table-clean th {
-            background-color: #1e293b;
-            color: #ffffff;
-            font-weight: bold;
+            body {
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .print-only-area {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Sayfa yapısını A4 olarak sabitle */
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 12mm 10mm;
+            }
+
+            .glass-card {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+            }
         }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
 
     <!-- Üst Bar / Header -->
-    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50">
+    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50 no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">📊</span>
@@ -74,7 +75,7 @@
     <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
         <!-- GENEL FİLTRELEME ALANI -->
-        <div class="glass-card p-6 rounded-2xl">
+        <div class="glass-card p-6 rounded-2xl no-print">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-gray-100">
                 <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
                     🔍 Tarih Aralığı ve Filtreleme
@@ -105,8 +106,8 @@
             </div>
         </div>
 
-        <!-- KPI ÖZET KARTLARI -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- KPI ÖZET KARTLARI (EKRAN İÇİN) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
             <div class="glass-card p-4 rounded-2xl text-center">
                 <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Kayıt</span>
                 <p id="kpiRecordCount" class="text-2xl font-black text-slate-800 mt-1">0</p>
@@ -126,7 +127,7 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 1: USTA & OPERATÖR PERFORMANSLARI -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             <div class="glass-card p-6 rounded-2xl">
                 <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                     👨‍🔧 Usta Bazlı Ort. Randıman (%)
@@ -152,7 +153,7 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 2: MAKİNE VE VARDİYA GRAFİKLERİ -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             <div class="glass-card p-6 rounded-2xl">
                 <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                     ⚡ Makine Ortalamaları (%)
@@ -172,31 +173,55 @@
             </div>
         </div>
 
-        <!-- EKRANDA GÖRÜNEN ŞIK MATRİS RAPOR KARTI -->
-        <div class="glass-card p-6 rounded-2xl">
-            <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+        <!-- EKRANDA GÖRÜNEN VE DOĞRUDAN PDF YAZDIRILAN ŞIK KART -->
+        <div class="glass-card p-6 rounded-2xl print-only-area">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-200">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">📋 Vardiya Bazlı Randıman Matrisi (1-16 Fitil)</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Seçili tarihteki vardiya randımanları ve günlük ortalamalar.</p>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h3>
+                    <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-1"></p>
                 </div>
-                <button onclick="generatePDF()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-md flex items-center gap-2">
-                    <span>📄 A4 PDF Raporu İndir</span>
-                </button>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs text-gray-400 font-medium no-print">Rapor Tarihi: <span id="pdfPrintTime"></span></span>
+                    <button onclick="triggerPrint()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 no-print">
+                        <span>📄 A4 PDF Raporu İndir</span>
+                    </button>
+                </div>
             </div>
 
+            <!-- PDF İÇİNDEKİ MİNİ KPI KARTLARI -->
+            <div class="grid grid-cols-4 gap-3 mb-6">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase block">KAYIT</span>
+                    <span id="pdfKpiCount" class="text-base font-black text-slate-800">0</span>
+                </div>
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase block">GENEL ORT.</span>
+                    <span id="pdfKpiAvg" class="text-base font-black text-indigo-600">%0</span>
+                </div>
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase block">EN YÜKSEK</span>
+                    <span id="pdfKpiMax" class="text-base font-black text-emerald-600">%0</span>
+                </div>
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase block">EN DÜŞÜK</span>
+                    <span id="pdfKpiMin" class="text-base font-black text-rose-600">%0</span>
+                </div>
+            </div>
+
+            <!-- TABLO -->
             <div class="overflow-x-auto">
                 <table class="w-full text-center border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
-                            <th class="p-3 rounded-tl-lg">FİTİL</th>
-                            <th class="p-3">A VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(08:00 - 16:00)</span></th>
-                            <th class="p-3">B VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(16:00 - 24:00)</span></th>
-                            <th class="p-3">C VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(00:00 - 08:00)</span></th>
-                            <th class="p-3 bg-slate-900 rounded-tr-lg">GÜNLÜK ORT.</th>
+                            <th class="p-3 border border-slate-700 w-1/5">FİTİL</th>
+                            <th class="p-3 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(08:00 - 16:00)</span></th>
+                            <th class="p-3 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(16:00 - 24:00)</span></th>
+                            <th class="p-3 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(00:00 - 08:00)</span></th>
+                            <th class="p-3 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
                         </tr>
                     </thead>
-                    <tbody id="displayMatrixBody" class="divide-y divide-gray-100 font-medium">
-                        <!-- Ekran Tablosu JS ile dolacak -->
+                    <tbody id="displayMatrixBody" class="divide-y divide-gray-200 font-semibold text-xs">
+                        <!-- JS ile doldurulacak -->
                     </tbody>
                 </table>
             </div>
@@ -204,56 +229,7 @@
 
     </div>
 
-    <!-- ARKA PLANDA PDF İÇİN HAZIRLANAN NET HTML ALANI (HİÇBİR ZAMAN BOŞ ÇIKMAZ) -->
-    <div id="pdfPrintHiddenArea">
-        <div style="border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
-            <div>
-                <h2 style="font-size: 20px; font-weight: bold; color: #0f172a; margin: 0;">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
-                <p id="pdfHiddenDateTitle" style="font-size: 12px; font-weight: bold; color: #4f46e5; margin: 4px 0 0 0;"></p>
-            </div>
-            <div style="text-align: right; font-size: 10px; color: #64748b;">
-                Oluşturulma Tarihi:<br><span id="pdfHiddenPrintTime" style="font-weight: bold; color: #0f172a;"></span>
-            </div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-            <tr>
-                <td style="width:25%; border:1px solid #e2e8f0; background:#f8fafc; padding:8px; text-align:center;">
-                    <span style="font-size:9px; color:#64748b; font-weight:bold; display:block;">TOPLAM KAYIT</span>
-                    <span id="pdfHiddenKpiCount" style="font-size:16px; font-weight:bold; color:#0f172a;">0</span>
-                </td>
-                <td style="width:25%; border:1px solid #e2e8f0; background:#f8fafc; padding:8px; text-align:center;">
-                    <span style="font-size:9px; color:#64748b; font-weight:bold; display:block;">GENEL ORTALAMA</span>
-                    <span id="pdfHiddenKpiAvg" style="font-size:16px; font-weight:bold; color:#4f46e5;">%0</span>
-                </td>
-                <td style="width:25%; border:1px solid #e2e8f0; background:#f8fafc; padding:8px; text-align:center;">
-                    <span style="font-size:9px; color:#64748b; font-weight:bold; display:block;">EN YÜKSEK</span>
-                    <span id="pdfHiddenKpiMax" style="font-size:16px; font-weight:bold; color:#16a34a;">%0</span>
-                </td>
-                <td style="width:25%; border:1px solid #e2e8f0; background:#f8fafc; padding:8px; text-align:center;">
-                    <span style="font-size:9px; color:#64748b; font-weight:bold; display:block;">EN DÜŞÜK</span>
-                    <span id="pdfHiddenKpiMin" style="font-size:16px; font-weight:bold; color:#dc2626;">%0</span>
-                </td>
-            </tr>
-        </table>
-
-        <table class="pdf-table-clean">
-            <thead>
-                <tr>
-                    <th style="width: 15%;">FİTİL</th>
-                    <th style="width: 21%;">A VARDİYASI<br><span style="font-size:8px; font-weight:normal;">(08:00 - 16:00)</span></th>
-                    <th style="width: 21%;">B VARDİYASI<br><span style="font-size:8px; font-weight:normal;">(16:00 - 24:00)</span></th>
-                    <th style="width: 21%;">C VARDİYASI<br><span style="font-size:8px; font-weight:normal;">(00:00 - 08:00)</span></th>
-                    <th style="width: 22%; background-color:#020617;">GÜNLÜK ORT.</th>
-                </tr>
-            </thead>
-            <tbody id="pdfHiddenMatrixBody">
-                <!-- PDF JS Doldurur -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Yükleniyor Ekranı -->
+    <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
         <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
         <p class="font-semibold text-sm">Veriler Okunuyor...</p>
@@ -365,14 +341,14 @@
 
             let filtered = [];
             if (isRangeMode) {
-                document.getElementById("pdfHiddenDateTitle").textContent = `Tarih Aralığı: ${startD} ~ ${endD}`;
+                document.getElementById("pdfDateTitle").textContent = `Tarih Aralığı: ${startD} ~ ${endD}`;
                 filtered = rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD);
             } else {
-                document.getElementById("pdfHiddenDateTitle").textContent = `Rapor Tarihi: ${startD}`;
+                document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${startD}`;
                 filtered = rawData.filter(item => item.dateStr === startD);
             }
 
-            document.getElementById("pdfHiddenPrintTime").textContent = new Date().toLocaleString("tr-TR");
+            document.getElementById("pdfPrintTime").textContent = new Date().toLocaleString("tr-TR");
 
             renderKPIs(filtered);
             renderCharts(filtered);
@@ -382,10 +358,10 @@
         function renderKPIs(data) {
             const count = data.length;
             document.getElementById("kpiRecordCount").textContent = count;
-            document.getElementById("pdfHiddenKpiCount").textContent = count;
+            document.getElementById("pdfKpiCount").textContent = count;
 
             if (count === 0) {
-                ["kpiAvgEfficiency", "kpiMaxEfficiency", "kpiMinEfficiency", "pdfHiddenKpiAvg", "pdfHiddenKpiMax", "pdfHiddenKpiMin"].forEach(id => {
+                ["kpiAvgEfficiency", "kpiMaxEfficiency", "kpiMinEfficiency", "pdfKpiAvg", "pdfKpiMax", "pdfKpiMin"].forEach(id => {
                     document.getElementById(id).textContent = "%0";
                 });
                 return;
@@ -400,24 +376,21 @@
             document.getElementById("kpiMaxEfficiency").textContent = `%${max}`;
             document.getElementById("kpiMinEfficiency").textContent = `%${min}`;
 
-            document.getElementById("pdfHiddenKpiAvg").textContent = `%${avg}`;
-            document.getElementById("pdfHiddenKpiMax").textContent = `%${max}`;
-            document.getElementById("pdfHiddenKpiMin").textContent = `%${min}`;
+            document.getElementById("pdfKpiAvg").textContent = `%${avg}`;
+            document.getElementById("pdfKpiMax").textContent = `%${max}`;
+            document.getElementById("pdfKpiMin").textContent = `%${min}`;
         }
 
         function renderCharts(data) {
-            // Usta Grafiği
             const masterMap = groupByAverage(data, 'master');
             masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
 
-            // Operatör Grafiği (Yatay ve Sıralı)
             const opMap = groupByAverage(data, 'operator');
             const sortedOperators = Object.keys(opMap).sort((a,b) => parseFloat(opMap[b]) - parseFloat(opMap[a]));
             const sortedValues = sortedOperators.map(k => opMap[k]);
 
             operatorChartInstance = createHorizontalBarChart('operatorChart', operatorChartInstance, sortedOperators, sortedValues, 'Operatör Randımanı (%)', '#10b981');
 
-            // Makine Grafiği
             const mData = [];
             const mLabels = [];
             for(let i=1; i<=16; i++){
@@ -433,7 +406,6 @@
             }
             machineChartInstance = createBarChart('machineChart', machineChartInstance, mLabels, mData, 'Makine Randımanı (%)', '#f59e0b');
 
-            // Vardiya Grafiği
             const shiftMap = groupByAverage(data, 'shift');
             shiftChartInstance = createBarChart('shiftChart', shiftChartInstance, Object.keys(shiftMap), Object.values(shiftMap), 'Vardiya Randımanı (%)', '#8b5cf6');
         }
@@ -528,10 +500,7 @@
 
         function renderMatrixTables(data) {
             const displayBody = document.getElementById("displayMatrixBody");
-            const pdfBody = document.getElementById("pdfHiddenMatrixBody");
-
             displayBody.innerHTML = "";
-            pdfBody.innerHTML = "";
 
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
@@ -549,28 +518,16 @@
                     dayAvgText = `%${dayAvgVal.toFixed(1)}`;
                 }
 
-                // EKRAN TABLOSU SATIRI (Tailwind Şık Görünüm)
                 const trDisplay = document.createElement("tr");
-                trDisplay.className = "hover:bg-slate-50 transition";
+                trDisplay.className = "hover:bg-slate-50 transition border-b border-gray-100";
                 trDisplay.innerHTML = `
-                    <td class="p-2.5 font-bold bg-slate-100 text-slate-800">${i}</td>
-                    <td class="p-2.5 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}</td>
-                    <td class="p-2.5 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}</td>
-                    <td class="p-2.5 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}</td>
-                    <td class="p-2.5 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
+                    <td class="p-2 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
+                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}</td>
+                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}</td>
+                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}</td>
+                    <td class="p-2 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
                 `;
                 displayBody.appendChild(trDisplay);
-
-                // PDF TABLOSU SATIRI (Saf CSS Net Görünüm)
-                const trPdf = document.createElement("tr");
-                trPdf.innerHTML = `
-                    <td style="font-weight:bold; background-color:#f1f5f9; color:#0f172a;">${i}</td>
-                    <td style="${getPdfStyle(shiftA)}">${formatValue(shiftA)}</td>
-                    <td style="${getPdfStyle(shiftB)}">${formatValue(shiftB)}</td>
-                    <td style="${getPdfStyle(shiftC)}">${formatValue(shiftC)}</td>
-                    <td style="font-weight:bold; ${getPdfStyle(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
-                `;
-                pdfBody.appendChild(trPdf);
             }
         }
 
@@ -584,39 +541,15 @@
         }
 
         function getTailwindBg(val, isEmpty = false) {
-            if (val === null || isEmpty) return "text-gray-400";
+            if (val === null || isEmpty) return "text-gray-400 font-normal";
             if (val >= 70) return "bg-emerald-100 text-emerald-800 font-bold";
             if (val >= 60) return "bg-amber-100 text-amber-800 font-bold";
             return "bg-rose-100 text-rose-800 font-bold";
         }
 
-        function getPdfStyle(val, isEmpty = false) {
-            if (val === null || isEmpty) return "color:#94a3b8;";
-            if (val >= 70) return "background-color:#dcfce7; color:#166534; font-weight:bold;";
-            if (val >= 60) return "background-color:#fef9c3; color:#854d0e; font-weight:bold;";
-            return "background-color:#fee2e2; color:#991b1b; font-weight:bold;";
-        }
-
-        function generatePDF() {
-            showLoading(true);
-            const element = document.getElementById("pdfPrintHiddenArea");
-            const startD = document.getElementById("startDate").value;
-
-            const opt = {
-                margin:       [10, 10, 10, 10],
-                filename:     `Fitil_Randiman_Raporu_${startD}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                showLoading(false);
-            }).catch(err => {
-                console.error("PDF Hatası:", err);
-                showLoading(false);
-                alert("PDF oluşturulurken bir sorun oluştu.");
-            });
+        // KUSURSUZ YAZDIRMA (PDF) TETİKLEYİCİSİ
+        function triggerPrint() {
+            window.print();
         }
 
         function showLoading(show) {
