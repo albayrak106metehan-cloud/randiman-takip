@@ -101,9 +101,9 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Ustası (Otomatik Kilitli)</label>
-                            <!-- Otomatik Giriş Yapan Ustanın Adı Gelecek -->
-                            <input type="text" id="inputMaster" readonly required class="w-full border border-gray-200 bg-gray-100 font-bold text-indigo-700 rounded-xl p-2.5 text-sm cursor-not-allowed">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Vardiya Ustası</label>
+                            <!-- Otomatik Dolar Ama Düzenlenebilir -->
+                            <input type="text" id="inputMaster" placeholder="Usta Adı Soyadı" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
                     </div>
 
@@ -156,7 +156,7 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwt3X5x7l3H2YdF3A-8t-zL7G-Pj-L_9a8X9X9/exec";
 
-        // GÜNCELLENMİŞ KULLANICI VE ŞİFRE LİSTESİ
+        // KULLANICI VE ŞİFRE LİSTESİ
         const USERS = [
             { username: "Hacıkivrak", password: "Karmis123", name: "Hacı Kıvrak", role: "usta" },
             { username: "Ahmetcelik", password: "Karmis123", name: "Ahmet Çelik", role: "usta" },
@@ -262,7 +262,7 @@
                 date: document.getElementById("inputDate").value,
                 time: document.getElementById("inputTime").value,
                 shift: document.getElementById("selectShift").value,
-                master: currentUser.name,
+                master: document.getElementById("inputMaster").value, // Kutudaki yazılı usta adını gönderir
                 machine: document.getElementById("selectMachine").value,
                 operator: document.getElementById("inputOperator").value,
                 efficiency: document.getElementById("inputEfficiency").value,
