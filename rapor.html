@@ -21,8 +21,9 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
-        /* YAZDIRMA (PDF) STİLLERİ */
+        /* YAZDIRMA (PDF) / WINDOW.PRINT İÇİN ORTALAMA VE YAZICI STİLLERİ */
         @media print {
+            /* Yazdırılmayacak genel öğeler */
             header, .no-print, #loadingOverlay {
                 display: none !important;
             }
@@ -33,22 +34,25 @@
                 margin: 0 !important;
             }
 
-            .print-only-area {
-                display: block !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
             @page {
                 size: A4 portrait;
                 margin: 10mm;
             }
 
-            .glass-card {
+            /* Seçilen Kartı A4 Sayfasının Tam Ortasına Hizalama */
+            .print-target {
+                display: block !important;
+                width: 100% !important;
+                max-width: 750px !important;
+                margin: auto !important;
                 box-shadow: none !important;
                 border: 1px solid #cbd5e1 !important;
                 page-break-inside: avoid;
+            }
+
+            /* Yazdırılmayan kartları gizleme mantığı (JS sınıfı ile kontrol edilir) */
+            body.printing-single-card .glass-card:not(.print-target) {
+                display: none !important;
             }
         }
     </style>
@@ -128,22 +132,34 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 1: USTA & OPERATÖR PERFORMANSLARI -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-            <div class="glass-card p-6 rounded-2xl">
-                <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    👨‍🔧 Usta Bazlı Ort. Randıman (%)
-                </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- USTA KARTI -->
+            <div id="cardMaster" class="glass-card p-6 rounded-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        👨‍🔧 Usta Bazlı Ort. Randıman (%)
+                    </h3>
+                    <button onclick="printCard('cardMaster')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                        <span>📄 PDF / Yazdır</span>
+                    </button>
+                </div>
                 <div class="h-72">
                     <canvas id="masterChart"></canvas>
                 </div>
             </div>
 
-            <div class="glass-card p-6 rounded-2xl">
+            <!-- OPERATÖR KARTI -->
+            <div id="cardOperator" class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        👷 Operatör Bazlı Randıman Sıralaması (%)
-                    </h3>
-                    <span class="text-[11px] text-gray-400 font-medium">(Yüksekten Düşüğe)</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            👷 Operatör Bazlı Randıman Sıralaması (%)
+                        </h3>
+                        <span class="text-[11px] text-gray-400 font-medium">(Yüksekten Düşüğe)</span>
+                    </div>
+                    <button onclick="printCard('cardOperator')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                        <span>📄 PDF / Yazdır</span>
+                    </button>
                 </div>
                 <div class="h-72 overflow-y-auto pr-2">
                     <div id="operatorChartContainer" class="relative min-h-[280px]">
@@ -154,20 +170,32 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 2: MAKİNE VE VARDİYA GRAFİKLERİ -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-            <div class="glass-card p-6 rounded-2xl">
-                <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    ⚡ Makine Ortalamaları (%)
-                </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- MAKİNE KARTI -->
+            <div id="cardMachine" class="glass-card p-6 rounded-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        ⚡ Makine Ortalamaları (%)
+                    </h3>
+                    <button onclick="printCard('cardMachine')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                        <span>📄 PDF / Yazdır</span>
+                    </button>
+                </div>
                 <div class="h-64">
                     <canvas id="machineChart"></canvas>
                 </div>
             </div>
 
-            <div class="glass-card p-6 rounded-2xl">
-                <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    🕒 Vardiya Ortalamaları (%)
-                </h3>
+            <!-- VARDİYA KARTI -->
+            <div id="cardShift" class="glass-card p-6 rounded-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        🕒 Vardiya Ortalamaları (%)
+                    </h3>
+                    <button onclick="printCard('cardShift')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                        <span>📄 PDF / Yazdır</span>
+                    </button>
+                </div>
                 <div class="h-64">
                     <canvas id="shiftChart"></canvas>
                 </div>
@@ -175,7 +203,7 @@
         </div>
 
         <!-- EKRANDA GÖRÜNEN KART VE İNDİRME BUTONLARI -->
-        <div class="glass-card p-6 rounded-2xl print-only-area">
+        <div id="cardMatrix" class="glass-card p-6 rounded-2xl">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-200">
                 <div>
                     <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h3>
@@ -185,8 +213,8 @@
                     <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
                         <span>📊 Excel İndir</span>
                     </button>
-                    <button onclick="triggerPrint()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
-                        <span>📄 PDF / Yazdır</span>
+                    <button onclick="printCard('cardMatrix')" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
+                        <span>📄 A4 PDF / Yazdır</span>
                     </button>
                 </div>
             </div>
@@ -546,9 +574,23 @@
             return "bg-rose-100 text-rose-800 font-bold";
         }
 
-        // Doğrudan sistem yazdırma / PDF kaydetme
-        function triggerPrint() {
+        // DİLEDİĞİNİZ TEK BİR KARTI SEÇİP KAĞIDIN TAM ORTASINA GELECEK ŞEKİLDE YAZDIRMA
+        function printCard(cardId) {
+            document.body.classList.add("printing-single-card");
+            const target = document.getElementById(cardId);
+            if (target) {
+                target.classList.add("print-target");
+            }
+
             window.print();
+
+            // Yazdırma işlemi bittikten/kapatıldıktan sonra CSS sınıflarını temizle
+            setTimeout(() => {
+                document.body.classList.remove("printing-single-card");
+                if (target) {
+                    target.classList.remove("print-target");
+                }
+            }, 500);
         }
 
         // Excel dışa aktarım
