@@ -17,14 +17,48 @@
         @media print {
             .no-print { display: none !important; }
         }
-        /* PDF Çıktısı İçin Sabit Genişlik ve Görünürlük Garantisi */
-        .pdf-render-area {
-            width: 790px !important;
+
+        /* PDF ÇIKTISI İÇİN KATI VE ŞAŞMAZ CSS ŞABLONU */
+        #pdfRenderContainer {
+            width: 700px !important;
             background-color: #ffffff !important;
-            color: #000000 !important;
-            box-sizing: border-box;
-            display: block !important;
-            visibility: visible !important;
+            padding: 20px !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .pdf-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 15px !important;
+        }
+
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 4px !important;
+            text-align: center !important;
+            font-size: 11px !important;
+        }
+
+        .pdf-table th {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+        }
+
+        .pdf-kpi-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 15px !important;
+        }
+
+        .pdf-kpi-table td {
+            width: 25% !important;
+            border: 1px solid #e2e8f0 !important;
+            background-color: #f8fafc !important;
+            padding: 8px !important;
+            text-align: center !important;
         }
     </style>
 </head>
@@ -102,7 +136,7 @@
             </div>
         </div>
 
-        <!-- 1. GRAFİK BÖLÜMÜ: USTA & OPERATÖR PERFORMANSLARI -->
+        <!-- GRAFİK BÖLÜMÜ: USTA & OPERATÖR PERFORMANSLARI -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
@@ -128,7 +162,7 @@
             </div>
         </div>
 
-        <!-- 2. GRAFİK BÖLÜMÜ: MAKİNE VE VARDİYA GRAFİKLERİ -->
+        <!-- GRAFİK BÖLÜMÜ: MAKİNE VE VARDİYA GRAFİKLERİ -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
@@ -149,7 +183,7 @@
             </div>
         </div>
 
-        <!-- 3. ÖZEL PDF KARTI -->
+        <!-- ÖZEL A4 PDF RAPOR KARTI -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b no-print">
                 <div>
@@ -161,58 +195,62 @@
                 </button>
             </div>
 
-            <!-- PDF ALANI (Bu Alan İndirilir) -->
+            <!-- PDF ÇIKTI ALANININ BAŞLANGICI (SABİT PİKSEL VE NET DÜZEN) -->
             <div class="flex justify-center">
-                <div id="pdfContent" class="pdf-render-area p-6 border border-gray-300 rounded-lg space-y-5">
+                <div id="pdfRenderContainer">
                     
-                    <!-- PDF Başlık -->
-                    <div class="border-b-2 border-slate-800 pb-3 flex justify-between items-end">
-                        <div>
-                            <h2 class="text-xl font-black text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
-                            <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-1"></p>
-                        </div>
-                        <div class="text-right text-[10px] text-gray-500 font-medium">
-                            <p>Oluşturulma: <span id="pdfPrintTime"></span></p>
-                        </div>
-                    </div>
+                    <!-- Başlık Tablosu -->
+                    <table style="width:100%; border:none; margin-bottom:10px;">
+                        <tr>
+                            <td style="text-align:left; border:none; padding:0;">
+                                <h2 style="font-size:18px; font-weight:bold; color:#0f172a; margin:0;">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
+                                <p id="pdfDateTitle" style="font-size:12px; font-weight:bold; color:#4f46e5; margin:3px 0 0 0;"></p>
+                            </td>
+                            <td style="text-align:right; border:none; padding:0; font-size:10px; color:#64748b;">
+                                Oluşturulma:<br><span id="pdfPrintTime" style="font-weight:bold;"></span>
+                            </td>
+                        </tr>
+                    </table>
 
-                    <!-- PDF Özet -->
-                    <div class="grid grid-cols-4 gap-3">
-                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
-                            <span class="text-[10px] text-gray-500 font-bold uppercase block">Kayıt</span>
-                            <p id="pdfKpiCount" class="text-base font-black text-gray-800 mt-0.5">0</p>
-                        </div>
-                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
-                            <span class="text-[10px] text-gray-500 font-bold uppercase block">Genel Ort.</span>
-                            <p id="pdfKpiAvg" class="text-base font-black text-indigo-600 mt-0.5">%0</p>
-                        </div>
-                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
-                            <span class="text-[10px] text-gray-500 font-bold uppercase block">En Yüksek</span>
-                            <p id="pdfKpiMax" class="text-base font-black text-emerald-600 mt-0.5">%0</p>
-                        </div>
-                        <div class="bg-slate-50 p-2 rounded border border-slate-200 text-center">
-                            <span class="text-[10px] text-gray-500 font-bold uppercase block">En Düşük</span>
-                            <p id="pdfKpiMin" class="text-base font-black text-rose-600 mt-0.5">%0</p>
-                        </div>
-                    </div>
+                    <hr style="border:0; border-top:2px solid #0f172a; margin:5px 0 15px 0;">
 
-                    <!-- Matris Tablo -->
-                    <div>
-                        <table class="w-full text-center border-collapse border-2 border-slate-300 text-xs">
-                            <thead>
-                                <tr class="bg-slate-800 text-white font-bold text-[11px] uppercase">
-                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">FİTİL</th>
-                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">A VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(08:00 - 16:00)</span></th>
-                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">B VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(16:00 - 24:00)</span></th>
-                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5">C VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(00:00 - 08:00)</span></th>
-                                    <th class="border border-slate-300 py-2.5 px-2 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
-                                </tr>
-                            </thead>
-                            <tbody id="matrixTableBody" class="divide-y divide-gray-200">
-                                <!-- JS Doldurur -->
-                            </tbody>
-                        </table>
-                    </div>
+                    <!-- Özet Kartlar Tablosu -->
+                    <table class="pdf-kpi-table">
+                        <tr>
+                            <td>
+                                <div style="font-size:9px; color:#64748b; font-weight:bold; text-transform:uppercase;">KAYIT</div>
+                                <div id="pdfKpiCount" style="font-size:15px; font-weight:bold; color:#0f172a; margin-top:2px;">0</div>
+                            </td>
+                            <td>
+                                <div style="font-size:9px; color:#64748b; font-weight:bold; text-transform:uppercase;">GENEL ORT.</div>
+                                <div id="pdfKpiAvg" style="font-size:15px; font-weight:bold; color:#4f46e5; margin-top:2px;">%0</div>
+                            </td>
+                            <td>
+                                <div style="font-size:9px; color:#64748b; font-weight:bold; text-transform:uppercase;">EN YÜKSEK</div>
+                                <div id="pdfKpiMax" style="font-size:15px; font-weight:bold; color:#16a34a; margin-top:2px;">%0</div>
+                            </td>
+                            <td>
+                                <div style="font-size:9px; color:#64748b; font-weight:bold; text-transform:uppercase;">EN DÜŞÜK</div>
+                                <div id="pdfKpiMin" style="font-size:15px; font-weight:bold; color:#dc2626; margin-top:2px;">%0</div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Ana Matris Tablosu -->
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width:15%;">FİTİL</th>
+                                <th style="width:21%;">A VARDİYASI<br><span style="font-size:8px; font-weight:normal; opacity:0.8;">(08:00 - 16:00)</span></th>
+                                <th style="width:21%;">B VARDİYASI<br><span style="font-size:8px; font-weight:normal; opacity:0.8;">(16:00 - 24:00)</span></th>
+                                <th style="width:21%;">C VARDİYASI<br><span style="font-size:8px; font-weight:normal; opacity:0.8;">(00:00 - 08:00)</span></th>
+                                <th style="width:22%; background-color:#020617 !important;">GÜNLÜK ORT.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixTableBody">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
 
                 </div>
             </div>
@@ -377,7 +415,7 @@
             const masterMap = groupByAverage(data, 'master');
             masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
 
-            // Operatör Grafiği (YATAY VE SIRALI)
+            // Operatör Grafiği (Yatay ve Sıralı)
             const opMap = groupByAverage(data, 'operator');
             const sortedOperators = Object.keys(opMap).sort((a,b) => parseFloat(opMap[b]) - parseFloat(opMap[a]));
             const sortedValues = sortedOperators.map(k => opMap[k]);
@@ -514,14 +552,13 @@
                 }
 
                 const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-50 font-semibold";
 
                 tr.innerHTML = `
-                    <td class="border border-slate-300 py-2.5 px-2 font-bold bg-slate-100 text-slate-800">${i}</td>
-                    <td class="border border-slate-300 py-2.5 px-2 ${getBgClass(shiftA)}">${formatValue(shiftA)}</td>
-                    <td class="border border-slate-300 py-2.5 px-2 ${getBgClass(shiftB)}">${formatValue(shiftB)}</td>
-                    <td class="border border-slate-300 py-2.5 px-2 ${getBgClass(shiftC)}">${formatValue(shiftC)}</td>
-                    <td class="border border-slate-300 py-2.5 px-2 font-bold ${getBgClass(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
+                    <td style="font-weight:bold; background-color:#f1f5f9; color:#0f172a;">${i}</td>
+                    <td style="${getStyle(shiftA)}">${formatValue(shiftA)}</td>
+                    <td style="${getStyle(shiftB)}">${formatValue(shiftB)}</td>
+                    <td style="${getStyle(shiftC)}">${formatValue(shiftC)}</td>
+                    <td style="font-weight:bold; ${getStyle(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -536,22 +573,21 @@
             return val !== null ? `%${val.toFixed(1)}` : "-";
         }
 
-        function getBgClass(val, isEmpty = false) {
-            if (val === null || isEmpty) return "text-gray-400";
-            if (val >= 70) return "bg-green-100 text-green-800 font-bold";
-            if (val >= 60) return "bg-yellow-100 text-yellow-800 font-bold";
-            return "bg-red-100 text-red-800 font-bold";
+        function getStyle(val, isEmpty = false) {
+            if (val === null || isEmpty) return "color:#94a3b8;";
+            if (val >= 70) return "background-color:#dcfce7; color:#166534; font-weight:bold;";
+            if (val >= 60) return "background-color:#fef9c3; color:#854d0e; font-weight:bold;";
+            return "background-color:#fee2e2; color:#991b1b; font-weight:bold;";
         }
 
         function generatePDF() {
             showLoading(true);
-            const element = document.getElementById("pdfContent");
+            const element = document.getElementById("pdfRenderContainer");
             const startD = document.getElementById("startDate").value;
 
-            // Render tamamlansın diye kısa gecikme
             setTimeout(() => {
                 const opt = {
-                    margin:       [8, 8, 8, 8],
+                    margin:       [10, 10, 10, 10],
                     filename:     `Fitil_Randiman_Raporu_${startD}.pdf`,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: "#ffffff" },
@@ -561,11 +597,11 @@
                 html2pdf().set(opt).from(element).save().then(() => {
                     showLoading(false);
                 }).catch(err => {
-                    console.error("PDF Oluşturma Hatası:", err);
+                    console.error("PDF Hatası:", err);
                     showLoading(false);
                     alert("PDF oluşturulurken bir hata oluştu.");
                 });
-            }, 300);
+            }, 200);
         }
 
         function showLoading(show) {
