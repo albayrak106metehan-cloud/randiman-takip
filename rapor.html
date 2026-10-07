@@ -12,8 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- SheetJS Excel Kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- HTML2PDF Kütüphanesi (Grafik Kartı PDF Çıktıları İçin) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-color: #f8fafc; }
         
@@ -23,7 +21,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
-        /* YAZDIRMA (PDF) ÖZEL STİLLERİ */
+        /* YAZDIRMA (PDF) STİLLERİ */
         @media print {
             header, .no-print, #loadingOverlay {
                 display: none !important;
@@ -44,12 +42,13 @@
 
             @page {
                 size: A4 portrait;
-                margin: 12mm 10mm 12mm 10mm;
+                margin: 10mm;
             }
 
             .glass-card {
                 box-shadow: none !important;
                 border: 1px solid #cbd5e1 !important;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -130,33 +129,21 @@
 
         <!-- GRAFİK BÖLÜMÜ 1: USTA & OPERATÖR PERFORMANSLARI -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-            <!-- Usta Kartı -->
-            <div id="cardMaster" class="glass-card p-6 rounded-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        👨‍🔧 Usta Bazlı Ort. Randıman (%)
-                    </h3>
-                    <button onclick="exportCardToPDF('cardMaster', 'Usta_Randiman_Raporu')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                        <span>📄 PDF İndir</span>
-                    </button>
-                </div>
+            <div class="glass-card p-6 rounded-2xl">
+                <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    👨‍🔧 Usta Bazlı Ort. Randıman (%)
+                </h3>
                 <div class="h-72">
                     <canvas id="masterChart"></canvas>
                 </div>
             </div>
 
-            <!-- Operatör Kartı -->
-            <div id="cardOperator" class="glass-card p-6 rounded-2xl">
+            <div class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            👷 Operatör Bazlı Randıman Sıralaması (%)
-                        </h3>
-                        <span class="text-[11px] text-gray-400 font-medium">(Yüksekten Düşüğe)</span>
-                    </div>
-                    <button onclick="exportCardToPDF('cardOperator', 'Operator_Randiman_Raporu')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                        <span>📄 PDF İndir</span>
-                    </button>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        👷 Operatör Bazlı Randıman Sıralaması (%)
+                    </h3>
+                    <span class="text-[11px] text-gray-400 font-medium">(Yüksekten Düşüğe)</span>
                 </div>
                 <div class="h-72 overflow-y-auto pr-2">
                     <div id="operatorChartContainer" class="relative min-h-[280px]">
@@ -168,31 +155,19 @@
 
         <!-- GRAFİK BÖLÜMÜ 2: MAKİNE VE VARDİYA GRAFİKLERİ -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-            <!-- Makine Kartı -->
-            <div id="cardMachine" class="glass-card p-6 rounded-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        ⚡ Makine Ortalamaları (%)
-                    </h3>
-                    <button onclick="exportCardToPDF('cardMachine', 'Makine_Ortalamalari_Raporu')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                        <span>📄 PDF İndir</span>
-                    </button>
-                </div>
+            <div class="glass-card p-6 rounded-2xl">
+                <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    ⚡ Makine Ortalamaları (%)
+                </h3>
                 <div class="h-64">
                     <canvas id="machineChart"></canvas>
                 </div>
             </div>
 
-            <!-- Vardiya Kartı -->
-            <div id="cardShift" class="glass-card p-6 rounded-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        🕒 Vardiya Ortalamaları (%)
-                    </h3>
-                    <button onclick="exportCardToPDF('cardShift', 'Vardiya_Ortalamalari_Raporu')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                        <span>📄 PDF İndir</span>
-                    </button>
-                </div>
+            <div class="glass-card p-6 rounded-2xl">
+                <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    🕒 Vardiya Ortalamaları (%)
+                </h3>
                 <div class="h-64">
                     <canvas id="shiftChart"></canvas>
                 </div>
@@ -211,7 +186,7 @@
                         <span>📊 Excel İndir</span>
                     </button>
                     <button onclick="triggerPrint()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
-                        <span>📄 A4 PDF İndir</span>
+                        <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
             </div>
@@ -244,7 +219,7 @@
                             <th class="p-3 border border-slate-700 w-1/5">FİTİL</th>
                             <th class="p-3 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(08:00 - 16:00)</span></th>
                             <th class="p-3 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(16:00 - 24:00)</span></th>
-                            <th class="p-3 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[00:00 - 08:00)</span></th>
+                            <th class="p-3 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(00:00 - 08:00)</span></th>
                             <th class="p-3 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
                         </tr>
                     </thead>
@@ -571,40 +546,12 @@
             return "bg-rose-100 text-rose-800 font-bold";
         }
 
+        // Doğrudan sistem yazdırma / PDF kaydetme
         function triggerPrint() {
             window.print();
         }
 
-        // --- TEKİL KARTLARI (GRAFİKLERİ) PDF YAPMA FONKSİYONU ---
-        function exportCardToPDF(cardId, fileNamePrefix) {
-            showLoading(true);
-            const element = document.getElementById(cardId);
-            const startD = document.getElementById("startDate").value;
-
-            // PDF indir butonunu çekim esnasında geçici gizle
-            const btn = element.querySelector('button');
-            if (btn) btn.style.display = 'none';
-
-            const opt = {
-                margin:       [10, 10, 10, 10],
-                filename:     `${fileNamePrefix}_${startD}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: "#ffffff" },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                if (btn) btn.style.display = 'flex';
-                showLoading(false);
-            }).catch(err => {
-                console.error("Kart PDF Hatası:", err);
-                if (btn) btn.style.display = 'flex';
-                showLoading(false);
-                alert("PDF oluşturulurken bir hata oluştu.");
-            });
-        }
-
-        // --- EXCEL (.XLSX) DIŞA AKTARMA FONKSİYONU ---
+        // Excel dışa aktarım
         function exportToExcel() {
             const startD = document.getElementById("startDate").value;
             const endD = document.getElementById("endDate").value;
