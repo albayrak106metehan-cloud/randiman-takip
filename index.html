@@ -156,12 +156,15 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwt3X5x7l3H2YdF3A-8t-zL7G-Pj-L_9a8X9X9/exec";
 
-        // KULLANICI LİSTESİ VE YETKİLERİ (Buraları Dilediğiniz Gibi Düzenleyebilirsiniz)
+        // GÜNCELLENMİŞ KULLANICI VE ŞİFRE LİSTESİ
         const USERS = [
-            { username: "admin", password: "123", name: "Sistem Yöneticisi", role: "admin" },
-            { username: "usta1", password: "123", name: "Ahmet Usta", role: "usta" },
-            { username: "usta2", password: "123", name: "Mehmet Usta", role: "usta" },
-            { username: "usta3", password: "123", name: "Ali Usta", role: "usta" }
+            { username: "Hacıkivrak", password: "Karmis123", name: "Hacı Kıvrak", role: "usta" },
+            { username: "Ahmetcelik", password: "Karmis123", name: "Ahmet Çelik", role: "usta" },
+            { username: "Buraközüdüz", password: "Karmis1881", name: "Burak Özüdüz", role: "admin" },
+            { username: "Celilgödeliner", password: "Karmis1881", name: "Celil Gödeliner", role: "admin" },
+            { username: "Metehanalbayrak", password: "Karmis1881", name: "Metehan Albayrak", role: "admin" },
+            { username: "Yunusekin", password: "Karmis123", name: "Yunus Ekin", role: "usta" },
+            { username: "Hüseyinözkaya", password: "Karmis123", name: "Hüseyin Özkaya", role: "usta" }
         ];
 
         let currentUser = null;
@@ -184,7 +187,7 @@
         function handleLogin(e) {
             e.preventDefault();
             const uInput = document.getElementById("loginUsername").value.trim().toLowerCase();
-            const pInput = document.getElementById("loginPassword").value;
+            const pInput = document.getElementById("loginPassword").value.trim();
 
             const user = USERS.find(u => u.username.toLowerCase() === uInput && u.password === pInput);
 
@@ -259,7 +262,7 @@
                 date: document.getElementById("inputDate").value,
                 time: document.getElementById("inputTime").value,
                 shift: document.getElementById("selectShift").value,
-                master: currentUser.name, // Giriş Yapan Ustanın Adı
+                master: currentUser.name,
                 machine: document.getElementById("selectMachine").value,
                 operator: document.getElementById("inputOperator").value,
                 efficiency: document.getElementById("inputEfficiency").value,
