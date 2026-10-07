@@ -53,12 +53,19 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a id="navMakineler" href="makineler.html" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                        🖥️ Makineler
+                    <!-- Ortak Geçiş Butonları (Sadece Adminler Görebilir) -->
+                    <a id="navVeriGiris" href="index.html" class="hidden bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md items-center gap-1.5">
+                        📝 Veri Girişi ✓
                     </a>
-                    <a id="navRaporlar" href="rapor.html" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    <a id="navRaporlar" href="rapor.html" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
                         📊 Raporlar
                     </a>
+                    <a id="navMakineler" href="makineler.html" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                        🖥️ Makineler
+                    </a>
+                    <div id="navDivider" class="hidden h-6 w-px bg-slate-700 mx-1"></div>
+                    
+                    <!-- Ortak Çıkış Butonu -->
                     <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
                         🚪 Çıkış Yap
                     </button>
@@ -199,11 +206,16 @@
             document.getElementById("inputMaster").value = currentUser.name;
 
             if (currentUser.role === 'admin') {
-                document.getElementById("navMakineler").classList.remove("hidden");
+                document.getElementById("navVeriGiris").classList.remove("hidden");
+                document.getElementById("navVeriGiris").classList.add("flex");
                 document.getElementById("navRaporlar").classList.remove("hidden");
+                document.getElementById("navMakineler").classList.remove("hidden");
+                document.getElementById("navDivider").classList.remove("hidden");
             } else {
-                document.getElementById("navMakineler").classList.add("hidden");
+                document.getElementById("navVeriGiris").classList.add("hidden");
                 document.getElementById("navRaporlar").classList.add("hidden");
+                document.getElementById("navMakineler").classList.add("hidden");
+                document.getElementById("navDivider").classList.add("hidden");
             }
 
             setInitialDateTime();
@@ -255,7 +267,8 @@
                 machine: document.getElementById("selectMachine").value,
                 operator: document.getElementById("inputOperator").value,
                 efficiency: document.getElementById("inputEfficiency").value,
-                description: document.getElementById("inputDescription").value || "-"
+                description: document.getElementById("inputDescription").value || "-",
+                username: currentUser ? currentUser.username : "-"
             };
 
             fetch(SCRIPT_URL, {
