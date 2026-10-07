@@ -13,25 +13,30 @@
         @media print {
             .no-print { display: none !important; }
         }
+        /* PDF Özel A4 Taşma Ve Düzen Ayarları */
+        #pdfContent {
+            width: 790px !important; /* Standart A4 genişliği hizası */
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
 
     <!-- Üst Bar / Header (PDF'e Yansımaz) -->
     <header class="bg-slate-800 text-white shadow-lg sticky top-0 z-50 no-print">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <span class="text-2xl">📊</span>
-                <h1 class="text-xl md:text-2xl font-bold">Fitil Randıman Rapor Sayfası</h1>
+                <span class="text-xl">📊</span>
+                <h1 class="text-lg md:text-xl font-bold">Fitil Randıman Rapor Sayfası</h1>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="generatePDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
+                <button onclick="generatePDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
                     📄 PDF Rapor İndir
                 </button>
-                <a href="makineler.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow">
+                <a href="makineler.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow">
                     🖥️ Makineler
                 </a>
-                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
+                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
                     <span>📝 Veri Girişine Dön</span>
                 </a>
             </div>
@@ -41,20 +46,20 @@
     <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
         <!-- Filtreleme Alanı (PDF'e Yansımaz) -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 no-print">
-            <h2 class="text-base font-bold text-gray-700 mb-4 flex items-center gap-2">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 no-print">
+            <h2 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                 🔍 Tarih Seçimi ve Filtreleme
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Rapor Tarihi</label>
-                    <input type="date" id="reportDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <input type="date" id="reportDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
                 <div class="flex gap-2 col-span-2">
-                    <button onclick="applyFilters()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                    <button onclick="applyFilters()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition">
                         Filtrele
                     </button>
-                    <button onclick="resetToToday()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+                    <button onclick="resetToToday()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold px-4 py-2.5 rounded-lg transition">
                         Bugüne Dön
                     </button>
                 </div>
@@ -62,53 +67,53 @@
         </div>
 
         <!-- PDF ÇIKTISI ALINACAK ALAN -->
-        <div id="pdfContent" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
-            
-            <!-- PDF Başlığı -->
-            <div class="border-b pb-4 flex justify-between items-center">
+        <div class="flex justify-center">
+            <div id="pdfContent" class="bg-white p-6 rounded-xl border border-gray-200 space-y-4">
+                
+                <!-- PDF Başlığı -->
+                <div class="border-b pb-3 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
+                        <p id="pdfDateTitle" class="text-xs font-semibold text-indigo-600 mt-0.5"></p>
+                    </div>
+                    <div class="text-right text-[10px] text-gray-400">
+                        <p>Oluşturulma: <span id="pdfPrintTime"></span></p>
+                    </div>
+                </div>
+
+                <!-- Özet KPI Kartları -->
+                <div class="grid grid-cols-4 gap-3">
+                    <div class="bg-slate-50 p-2 rounded border text-center">
+                        <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block">Toplam Kayıt</span>
+                        <p id="kpiRecordCount" class="text-base font-bold text-gray-800 mt-0.5">0</p>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded border text-center">
+                        <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block">Genel Ort. Randıman</span>
+                        <p id="kpiAvgEfficiency" class="text-base font-bold text-indigo-600 mt-0.5">%0</p>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded border text-center">
+                        <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block">En Yüksek Randıman</span>
+                        <p id="kpiMaxEfficiency" class="text-base font-bold text-emerald-600 mt-0.5">%0</p>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded border text-center">
+                        <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block">En Düşük Randıman</span>
+                        <p id="kpiMinEfficiency" class="text-base font-bold text-rose-600 mt-0.5">%0</p>
+                    </div>
+                </div>
+
+                <!-- MATRİS TABLO FORMATI -->
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800">FİTİL MAKİNELERİ RANDIMAN RAPORU</h2>
-                    <p id="pdfDateTitle" class="text-sm font-medium text-indigo-600 mt-1"></p>
-                </div>
-                <div class="text-right text-xs text-gray-400">
-                    <p>Oluşturulma Tarihi: <span id="pdfPrintTime"></span></p>
-                </div>
-            </div>
-
-            <!-- Özet KPI Kartları -->
-            <div class="grid grid-cols-4 gap-4">
-                <div class="bg-slate-50 p-3 rounded-lg border text-center">
-                    <span class="text-[11px] text-gray-500 font-semibold uppercase">Toplam Kayıt</span>
-                    <p id="kpiRecordCount" class="text-xl font-bold text-gray-800 mt-0.5">0</p>
-                </div>
-                <div class="bg-slate-50 p-3 rounded-lg border text-center">
-                    <span class="text-[11px] text-gray-500 font-semibold uppercase">Genel Ort. Randıman</span>
-                    <p id="kpiAvgEfficiency" class="text-xl font-bold text-indigo-600 mt-0.5">%0</p>
-                </div>
-                <div class="bg-slate-50 p-3 rounded-lg border text-center">
-                    <span class="text-[11px] text-gray-500 font-semibold uppercase">En Yüksek Randıman</span>
-                    <p id="kpiMaxEfficiency" class="text-xl font-bold text-emerald-600 mt-0.5">%0</p>
-                </div>
-                <div class="bg-slate-50 p-3 rounded-lg border text-center">
-                    <span class="text-[11px] text-gray-500 font-semibold uppercase">En Düşük Randıman</span>
-                    <p id="kpiMinEfficiency" class="text-xl font-bold text-rose-600 mt-0.5">%0</p>
-                </div>
-            </div>
-
-            <!-- MATRİS TABLO FORMATI (1-16 Fitil vs A, B, C Vardiyaları) -->
-            <div>
-                <h3 class="text-base font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    📋 Vardiya Bazlı Randıman Matrisi
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-center border-collapse border border-gray-300 text-sm">
+                    <h3 class="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1.5">
+                        📋 Vardiya Bazlı Randıman Matrisi
+                    </h3>
+                    <table class="w-full text-center border-collapse border border-gray-300 text-xs">
                         <thead>
-                            <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
-                                <th class="border border-gray-300 p-2.5 w-1/5">FİTİL</th>
-                                <th class="border border-gray-300 p-2.5 w-1/5">A VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(08:00 - 16:00)</span></th>
-                                <th class="border border-gray-300 p-2.5 w-1/5">B VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(16:00 - 24:00)</span></th>
-                                <th class="border border-gray-300 p-2.5 w-1/5">C VARDİYASI<br><span class="font-normal text-[10px] text-slate-300">(00:00 - 08:00)</span></th>
-                                <th class="border border-gray-300 p-2.5 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
+                            <tr class="bg-slate-800 text-white font-bold text-[11px] uppercase">
+                                <th class="border border-gray-300 py-1.5 px-2 w-1/5">FİTİL</th>
+                                <th class="border border-gray-300 py-1.5 px-2 w-1/5">A VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(08:00 - 16:00)</span></th>
+                                <th class="border border-gray-300 py-1.5 px-2 w-1/5">B VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(16:00 - 24:00)</span></th>
+                                <th class="border border-gray-300 py-1.5 px-2 w-1/5">C VARDİYASI<br><span class="font-normal text-[9px] text-slate-300">(00:00 - 08:00)</span></th>
+                                <th class="border border-gray-300 py-1.5 px-2 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
                             </tr>
                         </thead>
                         <tbody id="matrixTableBody" class="divide-y divide-gray-200">
@@ -116,16 +121,16 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
+            </div>
         </div>
 
     </div>
 
     <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
-        <div class="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p class="font-semibold text-lg">Google E-Tablo Verileri Yükleniyor...</p>
+        <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="font-semibold text-sm">E-Tablo Verileri Yükleniyor...</p>
     </div>
 
     <script>
@@ -253,11 +258,11 @@
                 tr.className = "hover:bg-slate-50 font-medium";
 
                 tr.innerHTML = `
-                    <td class="border border-gray-300 p-2 font-bold bg-slate-100 text-slate-800">${i}</td>
-                    <td class="border border-gray-300 p-2 ${getBgClass(shiftA)}">${formatValue(shiftA)}</td>
-                    <td class="border border-gray-300 p-2 ${getBgClass(shiftB)}">${formatValue(shiftB)}</td>
-                    <td class="border border-gray-300 p-2 ${getBgClass(shiftC)}">${formatValue(shiftC)}</td>
-                    <td class="border border-gray-300 p-2 font-bold ${getBgClass(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
+                    <td class="border border-gray-300 py-1 px-2 font-bold bg-slate-100 text-slate-800">${i}</td>
+                    <td class="border border-gray-300 py-1 px-2 ${getBgClass(shiftA)}">${formatValue(shiftA)}</td>
+                    <td class="border border-gray-300 py-1 px-2 ${getBgClass(shiftB)}">${formatValue(shiftB)}</td>
+                    <td class="border border-gray-300 py-1 px-2 ${getBgClass(shiftC)}">${formatValue(shiftC)}</td>
+                    <td class="border border-gray-300 py-1 px-2 font-bold ${getBgClass(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -284,10 +289,10 @@
             const selectedDate = document.getElementById("reportDate").value;
 
             const opt = {
-                margin:       [10, 10, 10, 10],
+                margin:       [5, 5, 5, 5], // Kenar boşlukları küçültüldü
                 filename:     `Fitil_Randiman_Raporu_${selectedDate}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
