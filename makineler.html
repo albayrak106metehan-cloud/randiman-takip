@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitil Makine Detay Paneli</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f8fafc; }
@@ -16,18 +17,19 @@
 </head>
 <body class="font-sans antialiased text-gray-800 pb-12">
 
+    <!-- Üst Bar / Header -->
     <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">🖥️</span>
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Makine Detay Paneli</h1>
             </div>
-            <!-- DİNAMİK YÖNLENDİRME BUTONLARI -->
+            <!-- YENİLENEN SAĞ ÜST YÖNLENDİRME BUTONLARI -->
             <div class="flex items-center gap-2">
-                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
                     📝 Veri Girişi
                 </a>
-                <a href="rapor.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                <a href="rapor.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
                     📊 Raporlar
                 </a>
                 <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
@@ -38,6 +40,8 @@
     </header>
 
     <div class="max-w-7xl mx-auto px-4 mt-8 space-y-6">
+
+        <!-- MAKİNE SEÇİM ALANI -->
         <div class="glass-card p-6 rounded-2xl">
             <h2 class="text-base font-bold text-slate-800 mb-4 pb-2 border-b">
                 🖥️ Makine Seçimi ve Detay Analizi
@@ -56,6 +60,7 @@
             </div>
         </div>
 
+        <!-- TABLO ALANI -->
         <div class="glass-card p-6 rounded-2xl">
             <h3 id="machineTitle" class="text-lg font-bold text-slate-800 mb-4">Fitil - 1 Geçmiş Kayıtları</h3>
             <div class="overflow-x-auto">
@@ -72,12 +77,15 @@
                         </tr>
                     </thead>
                     <tbody id="machineLogsBody" class="divide-y divide-gray-200 text-xs font-medium">
+                        <!-- JS ile doldurulacak -->
                     </tbody>
                 </table>
             </div>
         </div>
+
     </div>
 
+    <!-- Yükleniyor Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
         <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
         <p class="font-semibold text-sm">Veriler Okunuyor...</p>
@@ -88,7 +96,7 @@
         let allMachineLogs = [];
 
         document.addEventListener("DOMContentLoaded", function() {
-            // Yetki Kontrolü
+            // Yönetici Yetki Kontrolü
             const savedUser = localStorage.getItem("fitil_active_user");
             if (!savedUser) {
                 window.location.href = "index.html";
