@@ -183,7 +183,7 @@
 
     <script>
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwt3X5x7l3H2YdF3A-8t-zL7G-Pj-L_9a8X9X9/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvPLHn7NnmS1Ie5DmyJADDLU-D-VvugQkN8ZTUKsowbv4L1ylzW7SMhRUUdx6tvHLM/exec";
 
         const USERS = [
             { username: "Hacıkivrak", password: "Karmis123", name: "Hacı Kıvrak", role: "usta" },
@@ -316,8 +316,8 @@
                 document.getElementById("inputMaster").value = currentUser.name;
                 setInitialDateTime();
                 
-                // Kısa bir gecikme ile Google Sheets'ten güncel kayıtları çekip tabloya yansıt
-                setTimeout(fetchUserLogs, 1500);
+                // Google Sheets'in veriyi işlemesi için biraz daha uzun bekleyip listeyi yenile
+                setTimeout(fetchUserLogs, 2500);
             })
             .catch(err => {
                 console.error("Kayıt Hatası:", err);
@@ -348,8 +348,6 @@
             if (rows) {
                 rows.forEach(r => {
                     const c = r.c;
-                    // Eğer tablonuzda username sütunu (8. sütun / index 8) varsa filtrele
-                    // Alternatif olarak isim (master, index 3) ile de eşleştirebiliriz
                     if (c && c[0] && c[0].v !== null) {
                         let rawDate = c[0].f || c[0].v;
                         if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
