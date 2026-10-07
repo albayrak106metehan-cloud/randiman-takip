@@ -3,121 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitil Makine Detay Paneli</title>
+    <title>Fitil Makineleri Paneli</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f8fafc; }
-        .glass-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
+        body { background-color: #0f172a; }
     </style>
 </head>
-<body class="font-sans antialiased text-gray-800 pb-12">
+<body class="font-sans antialiased text-slate-100 pb-12">
 
     <!-- Üst Bar / Header -->
-    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50">
+    <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-xl">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <span class="text-2xl">🖥️</span>
-                <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Makine Detay Paneli</h1>
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">16 Fitil Makinesi İzleme Paneli</h1>
             </div>
-            <!-- YENİLENEN SAĞ ÜST YÖNLENDİRME BUTONLARI -->
-            <div class="flex items-center gap-2">
-                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
-                    📝 Veri Girişi
-                </a>
-                <a href="rapor.html" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md flex items-center gap-1.5">
-                    📊 Raporlar
-                </a>
-                <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                    🚪 Çıkış
+            <div class="flex items-center gap-3">
+                <button onclick="fetchGVizData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    🔄 Canlı Yenile
                 </button>
+                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition shadow">
+                    📝 Veri Girişine Dön
+                </a>
             </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 mt-8 space-y-6">
+    <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
-        <!-- MAKİNE SEÇİM ALANI -->
-        <div class="glass-card p-6 rounded-2xl">
-            <h2 class="text-base font-bold text-slate-800 mb-4 pb-2 border-b">
-                🖥️ Makine Seçimi ve Detay Analizi
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <!-- Tarih ve Vardiya Filtreleme Alanı -->
+        <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 shadow-md">
+            <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 items-end">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Makine Seçiniz</label>
-                    <select id="selectMachineDetail" onchange="loadMachineData()" class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <script>
-                            for(let i=1; i<=16; i++) {
-                                document.write(`<option value="Fitil - ${i}">Fitil - ${i}</option>`);
-                            }
-                        </script>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">📅 Tarih Seçimi</label>
+                    <input type="date" id="filterDate" onchange="renderMachineGrid()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">🕒 Vardiya Seçimi</label>
+                    <select id="filterShift" onchange="renderMachineGrid()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="ALL">Tüm Vardiyalar (Ortalama)</option>
+                        <option value="1. Vardiya (08:00 - 16:00)">1. Vardiya (08:00 - 16:00)</option>
+                        <option value="2. Vardiya (16:00 - 24:00)">2. Vardiya (16:00 - 24:00)</option>
+                        <option value="3. Vardiya (00:00 - 08:00)">3. Vardiya (00:00 - 08:00)</option>
                     </select>
+                </div>
+                <div class="flex gap-2 sm:col-span-1 md:col-span-2">
+                    <button onclick="resetToToday()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1">
+                        📆 Bugüne Dön / Sıfırla
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- TABLO ALANI -->
-        <div class="glass-card p-6 rounded-2xl">
-            <h3 id="machineTitle" class="text-lg font-bold text-slate-800 mb-4">Fitil - 1 Geçmiş Kayıtları</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-center border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
-                            <th class="p-3">Tarih</th>
-                            <th class="p-3">Saat</th>
-                            <th class="p-3">Vardiya</th>
-                            <th class="p-3">Usta</th>
-                            <th class="p-3">Operatör</th>
-                            <th class="p-3">Randıman (%)</th>
-                            <th class="p-3">Açıklama</th>
-                        </tr>
-                    </thead>
-                    <tbody id="machineLogsBody" class="divide-y divide-gray-200 text-xs font-medium">
-                        <!-- JS ile doldurulacak -->
-                    </tbody>
-                </table>
+        <!-- Özet Sayaçlar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Toplam Makine</span>
+                <p class="text-2xl font-extrabold text-indigo-400 mt-1">16 Fitil</p>
             </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">İyi (≥%70)</span>
+                <p id="countGood" class="text-2xl font-extrabold text-emerald-400 mt-1">0</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Normal (%60 - %70)</span>
+                <p id="countWarning" class="text-2xl font-extrabold text-amber-400 mt-1">0</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Kritik (<%60)</span>
+                <p id="countDanger" class="text-2xl font-extrabold text-rose-500 mt-1">0</p>
+            </div>
+        </div>
+
+        <p class="text-xs text-slate-400 text-center">💡 Seçili tarih ve vardiyaya göre filtreleme yapılır. Detaylar için makine kartına tıklayın.</p>
+
+        <!-- 16 Makine Kartlar Izgarası -->
+        <div id="machinesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <!-- JavaScript ile doldurulacak -->
         </div>
 
     </div>
 
+    <!-- Makine Detay Modal (Açılır Pencere) -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+                <div>
+                    <h3 id="modalTitle" class="text-xl font-bold text-slate-100 flex items-center gap-2"></h3>
+                    <p id="modalSubTitle" class="text-xs text-slate-400 mt-0.5"></p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-lg transition text-sm">
+                    ✕ Kapat
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1 space-y-4">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                            <tr>
+                                <th class="p-2.5">Tarih</th>
+                                <th class="p-2.5">Vardiya</th>
+                                <th class="p-2.5">Usta</th>
+                                <th class="p-2.5">Operatör</th>
+                                <th class="p-2.5">Randıman</th>
+                                <th class="p-2.5">Not</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody" class="divide-y divide-slate-800 text-slate-300">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Yükleniyor Göstergesi -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
-        <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p class="font-semibold text-sm">Veriler Okunuyor...</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
+        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="font-semibold text-lg text-slate-200">Makinelerin Canlı Verileri Çekildiği...</p>
     </div>
 
     <script>
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
-        let allMachineLogs = [];
+        let rawData = [];
 
         document.addEventListener("DOMContentLoaded", function() {
-            // Yönetici Yetki Kontrolü
-            const savedUser = localStorage.getItem("fitil_active_user");
-            if (!savedUser) {
-                window.location.href = "index.html";
-                return;
-            }
-            const user = JSON.parse(savedUser);
-            if (user.role !== "admin") {
-                alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır.");
-                window.location.href = "index.html";
-                return;
-            }
-
-            fetchMachineLogs();
+            setTodayDate();
+            fetchGVizData();
         });
 
-        function handleLogout() {
-            localStorage.removeItem("fitil_active_user");
-            window.location.href = "index.html";
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("filterDate").value = today;
         }
 
-        function fetchMachineLogs() {
+        function resetToToday() {
+            setTodayDate();
+            document.getElementById("filterShift").value = "ALL";
+            renderMachineGrid();
+        }
+
+        function fetchGVizData() {
             showLoading(true);
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
@@ -128,16 +160,19 @@
                     const json = JSON.parse(jsonString);
                     parseGVizRows(json.table.rows);
                 })
-                .catch(err => console.error("Veri hatası:", err))
+                .catch(err => {
+                    console.error("Veri çekme hatası:", err);
+                    alert("E-Tablo verileri çekilemedi. Paylaşım ayarlarını kontrol edin.");
+                })
                 .finally(() => showLoading(false));
         }
 
         function parseGVizRows(rows) {
-            allMachineLogs = [];
+            rawData = [];
             if (rows) {
                 rows.forEach(r => {
                     const c = r.c;
-                    if (c && c[0] && c[0].v !== null && c[0].v !== undefined) {
+                    if (c && c[0] && c[0].v !== null) {
                         let rawDate = c[0].f || c[0].v;
                         if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
                             const dateParts = rawDate.match(/\d+/g);
@@ -149,7 +184,7 @@
                             }
                         }
 
-                        allMachineLogs.push({
+                        rawData.push({
                             dateStr: String(rawDate).split('T')[0],
                             timeStr: c[1] ? c[1].v : "-",
                             shift: c[2] ? c[2].v : "-",
@@ -162,42 +197,191 @@
                     }
                 });
             }
-            loadMachineData();
+
+            renderMachineGrid();
         }
 
-        function loadMachineData() {
-            const selectedM = document.getElementById("selectMachineDetail").value;
-            document.getElementById("machineTitle").textContent = `${selectedM} Geçmiş Kayıtları`;
+        function renderMachineGrid() {
+            const grid = document.getElementById("machinesGrid");
+            grid.innerHTML = "";
 
-            const filtered = allMachineLogs.filter(item => item.machine === selectedM);
-            const tbody = document.getElementById("machineLogsBody");
-            tbody.innerHTML = "";
+            const selectedDate = document.getElementById("filterDate").value;
+            const selectedShift = document.getElementById("filterShift").value;
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-gray-400">Bu makineye ait kayıt bulunamadı.</td></tr>`;
-                return;
+            let goodCount = 0;
+            let warningCount = 0;
+            let dangerCount = 0;
+
+            for (let i = 1; i <= 16; i++) {
+                const machineName = `Fitil - ${i}`;
+                
+                // Seçilen Tarih ve Makineye Ait Kayıtları Süz
+                let filteredEntries = rawData.filter(d => d.machine === machineName && d.dateStr === selectedDate);
+
+                // Vardiya Filtresi
+                if (selectedShift !== "ALL") {
+                    filteredEntries = filteredEntries.filter(d => d.shift === selectedShift);
+                }
+
+                // Her vardiya için sadece en son girilen kaydı koru
+                const shiftMap = {};
+                filteredEntries.forEach(entry => {
+                    shiftMap[entry.shift] = entry;
+                });
+                const validEntries = Object.values(shiftMap);
+
+                let cardBg = "bg-slate-900 border-slate-800 opacity-60";
+                let badgeClass = "bg-slate-800 text-slate-500 border-slate-700";
+                let progressBg = "bg-slate-700";
+                let effText = "%--";
+                let operatorText = "Veri Yok";
+                let masterText = "-";
+                let dateText = selectedDate;
+                let effValue = 0;
+
+                if (validEntries.length > 0) {
+                    cardBg = "bg-slate-900 border-slate-800 opacity-100";
+                    const lastEntry = validEntries[validEntries.length - 1];
+                    operatorText = lastEntry.operator;
+                    masterText = lastEntry.master;
+                    dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
+
+                    if (selectedShift === "ALL") {
+                        const totalEff = validEntries.reduce((sum, item) => sum + item.efficiency, 0);
+                        effValue = totalEff / validEntries.length;
+                    } else {
+                        effValue = lastEntry.efficiency;
+                    }
+
+                    effText = `%${effValue.toFixed(1)}`;
+
+                    // Renk Kuralı (70+ Yeşil, 60-70 Sarı, <60 Kırmızı)
+                    if (effValue >= 70) {
+                        goodCount++;
+                        cardBg = "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400 opacity-100";
+                        badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+                        progressBg = "bg-emerald-500";
+                    } else if (effValue >= 60) {
+                        warningCount++;
+                        cardBg = "bg-amber-950/30 border-amber-500/40 hover:border-amber-400 opacity-100";
+                        badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+                        progressBg = "bg-amber-500";
+                    } else {
+                        dangerCount++;
+                        cardBg = "bg-rose-950/30 border-rose-500/40 hover:border-rose-400 opacity-100";
+                        badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+                        progressBg = "bg-rose-500";
+                    }
+                }
+
+                const cardHtml = `
+                    <div onclick="openMachineDetail('${machineName}')" class="cursor-pointer rounded-xl border ${cardBg} p-5 shadow-lg flex flex-col justify-between space-y-4 hover:scale-[1.03] transition duration-200 group">
+                        <div class="flex justify-between items-center border-b border-slate-800/80 pb-3">
+                            <span class="font-bold text-lg text-slate-100 flex items-center gap-2 group-hover:text-indigo-400 transition">
+                                ⚙️ ${machineName}
+                            </span>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${badgeClass}">
+                                ${effText}
+                            </span>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>${selectedShift === "ALL" ? "Günlük Ort. Randıman" : "Vardiya Randımanı"}</span>
+                                <span class="font-semibold text-slate-200">${effText}</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div class="${progressBg} h-2 rounded-full transition-all duration-500" style="width: ${Math.min(effValue, 100)}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-xs space-y-1.5 text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/50">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Operatör:</span>
+                                <span class="font-medium text-indigo-300">${operatorText}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Usta:</span>
+                                <span class="font-medium text-slate-300">${masterText}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Kayıt:</span>
+                                <span class="text-[11px] text-slate-400">${dateText}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-[11px] text-indigo-400 font-semibold text-right pt-1 flex items-center justify-end gap-1 group-hover:underline">
+                            <span>Vardiya Detayları</span> ➔
+                        </div>
+                    </div>
+                `;
+
+                grid.innerHTML += cardHtml;
             }
 
-            filtered.reverse().forEach(item => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-50 transition border-b border-gray-100";
-                tr.innerHTML = `
-                    <td class="p-2.5 font-semibold text-slate-700">${item.dateStr}</td>
-                    <td class="p-2.5 text-gray-600">${item.timeStr}</td>
-                    <td class="p-2.5 text-gray-600">${item.shift}</td>
-                    <td class="p-2.5 text-gray-700 font-medium">${item.master}</td>
-                    <td class="p-2.5 text-gray-700 font-medium">${item.operator}</td>
-                    <td class="p-2.5 font-bold ${getTailwindBg(item.efficiency)}">%${item.efficiency.toFixed(1)}</td>
-                    <td class="p-2.5 text-gray-500 italic">${item.description}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+            document.getElementById("countGood").textContent = goodCount;
+            document.getElementById("countWarning").textContent = warningCount;
+            document.getElementById("countDanger").textContent = dangerCount;
         }
 
-        function getTailwindBg(val) {
-            if (val >= 70) return "text-emerald-600";
-            if (val >= 60) return "text-amber-600";
-            return "text-rose-600";
+        // TIKLANDIĞINDA SADECE SEÇİLİ TARİH VE VARDİYAYA GÖRE FİLTRELENMİŞ DETAYI GÖSTEREN DÜZELTİLMİŞ FONKSİYON
+        function openMachineDetail(machineName) {
+            const selectedDate = document.getElementById("filterDate").value;
+            const selectedShift = document.getElementById("filterShift").value;
+
+            // Önce makineye ve seçili tarihe göre süz
+            let filteredEntries = rawData.filter(d => d.machine === machineName && d.dateStr === selectedDate);
+
+            // Eğer özel bir vardiya seçiliyse ona göre de süz
+            if (selectedShift !== "ALL") {
+                filteredEntries = filteredEntries.filter(d => d.shift === selectedShift);
+            }
+
+            // Her vardiyadan en son girilen tek kaydı al
+            const shiftMap = {};
+            filteredEntries.forEach(entry => {
+                shiftMap[entry.shift] = entry;
+            });
+
+            const uniqueShiftEntries = Object.values(shiftMap).reverse();
+
+            document.getElementById("modalTitle").textContent = `⚙️ ${machineName} Vardiya Detayları`;
+            document.getElementById("modalSubTitle").textContent = `${selectedDate} tarihi (${selectedShift === "ALL" ? "Tüm Vardiyalar" : selectedShift}) için ${uniqueShiftEntries.length} kayıt bulundu.`;
+
+            const tbody = document.getElementById("modalTableBody");
+            tbody.innerHTML = "";
+
+            if (uniqueShiftEntries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">${selectedDate} tarihinde bu makineye ait vardiya kaydı bulunamadı.</td></tr>`;
+            } else {
+                uniqueShiftEntries.forEach(r => {
+                    let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+                    if (r.efficiency < 60) badgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+                    else if (r.efficiency < 70) badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-slate-800/50 transition border-b border-slate-800/50";
+                    tr.innerHTML = `
+                        <td class="p-2.5 font-medium text-slate-200">${r.dateStr} <span class="text-[10px] text-slate-500">(${r.timeStr})</span></td>
+                        <td class="p-2.5 text-xs text-slate-400">${r.shift}</td>
+                        <td class="p-2.5 text-xs font-medium text-indigo-300">${r.master}</td>
+                        <td class="p-2.5 text-xs text-slate-300">${r.operator}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeClass}">%${r.efficiency}</span></td>
+                        <td class="p-2.5 text-xs text-slate-400 max-w-[120px] truncate" title="${r.description}">${r.description}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const modal = document.getElementById("detailModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("detailModal");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
         }
 
         function showLoading(show) {
