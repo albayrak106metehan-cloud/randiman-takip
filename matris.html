@@ -1,1 +1,415 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitil Makineleri Matris ve Detay Raporu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS Excel Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        @media print {
+            header, .no-print, #loadingOverlay { display: none !important; }
+            body { background-color: #ffffff !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4 portrait; margin: 5mm; }
+            .print-target { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 10px !important; box-shadow: none !important; border: none !important; page-break-inside: avoid; }
+            #matrixTable th, #matrixTable td { padding: 4px 6px !important; font-size: 10px !important; }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800 pb-12">
 
+    <!-- Üst Bar / Header -->
+    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">📊</span>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Matris & Notlar Raporu</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    📝 Veri Girişi
+                </a>
+                <a href="rapor.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    📈 Grafik & Analiz
+                </a>
+                <a href="matris.html" class="bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md flex items-center gap-1.5">
+                    📊 Matris Raporu ✓
+                </a>
+                <a href="makineler.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    🖥️ Makineler
+                </a>
+                <div class="h-6 w-px bg-slate-700 mx-1"></div>
+                <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    🚪 Çıkış Yap
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- GENEL FİLTRELEME ALANI -->
+        <div class="glass-card p-6 rounded-2xl no-print">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-gray-100">
+                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    🔍 Tarih Seçimi ve Filtreleme
+                </h2>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="setFilterMode('single')" id="btnSingleMode" class="px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 text-white transition shadow-sm">Tek Günlük</button>
+                    <button onclick="setFilterMode('range')" id="btnRangeMode" class="px-3.5 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Tarih Aralığı</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label id="lblStartDate" class="block text-xs font-semibold text-gray-500 mb-1">Rapor Tarihi</label>
+                    <input type="date" id="startDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
+                </div>
+                <div id="endDateContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Bitiş Tarihi</label>
+                    <input type="date" id="endDate" onchange="applyFilters()" class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
+                </div>
+                <div class="flex gap-2 md:col-span-2">
+                    <button onclick="applyFilters()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-md">
+                        Filtrele
+                    </button>
+                    <button onclick="resetToToday()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold px-4 py-2.5 rounded-xl transition">
+                        Bugüne Dön
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MİNİ KPI KARTLARI -->
+        <div class="grid grid-cols-4 gap-3 no-print">
+            <div class="glass-card p-3 rounded-xl text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase block">KAYIT (MAKİNE-VARDİYA)</span>
+                <span id="pdfKpiCount" class="text-base font-black text-slate-800">0</span>
+            </div>
+            <div class="glass-card p-3 rounded-xl text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase block">GENEL ORT.</span>
+                <span id="pdfKpiAvg" class="text-base font-black text-indigo-600">%0</span>
+            </div>
+            <div class="glass-card p-3 rounded-xl text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase block">EN YÜKSEK</span>
+                <span id="pdfKpiMax" class="text-base font-black text-emerald-600">%0</span>
+            </div>
+            <div class="glass-card p-3 rounded-xl text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase block">EN DÜŞÜK</span>
+                <span id="pdfKpiMin" class="text-base font-black text-rose-600">%0</span>
+            </div>
+        </div>
+
+        <!-- TABLO KARTI -->
+        <div id="cardMatrix" class="glass-card p-6 rounded-2xl print-target">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-gray-200">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN, OPERATÖR, USTA & NOTLAR RAPORU</h3>
+                    <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-0.5"></p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
+                        <span>📊 Excel İndir</span>
+                    </button>
+                    <button onclick="window.print()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
+                        <span>📄 A4 PDF / Yazdır</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABLO -->
+            <div class="overflow-x-auto">
+                <table id="matrixTable" class="w-full text-center border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-800 text-white font-bold uppercase">
+                            <th class="p-2.5 border border-slate-700 w-1/5">FİTİL</th>
+                            <th class="p-2.5 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(08:00 - 16:00)</span></th>
+                            <th class="p-2.5 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(16:00 - 24:00)</span></th>
+                            <th class="p-2.5 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(00:00 - 08:00)</span></th>
+                            <th class="p-2.5 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="displayMatrixBody" class="divide-y divide-gray-200 font-semibold text-xs">
+                        <!-- JS Doldurur -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Yükleniyor Göstergesi -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
+        <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="font-semibold text-sm">Matris Verileri Yükleniyor...</p>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
+        let rawData = [];
+        let currentFilteredData = [];
+        let isRangeMode = false;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedUser = localStorage.getItem("fitil_active_user");
+            if (!savedUser) { window.location.href = "index.html"; return; }
+            const user = JSON.parse(savedUser);
+            if (user.role !== "admin") { alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır."); window.location.href = "index.html"; return; }
+
+            setTodayDate();
+            fetchGVizData();
+        });
+
+        function handleLogout() { localStorage.removeItem("fitil_active_user"); window.location.href = "index.html"; }
+        function setTodayDate() { const today = new Date().toISOString().split('T')[0]; document.getElementById("startDate").value = today; document.getElementById("endDate").value = today; }
+
+        function setFilterMode(mode) {
+            isRangeMode = (mode === 'range');
+            const btnSingle = document.getElementById("btnSingleMode");
+            const btnRange = document.getElementById("btnRangeMode");
+            const endContainer = document.getElementById("endDateContainer");
+            const lblStart = document.getElementById("lblStartDate");
+
+            if (isRangeMode) {
+                btnRange.className = "px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 text-white transition shadow-sm";
+                btnSingle.className = "px-3.5 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
+                endContainer.classList.remove("hidden");
+                lblStart.textContent = "Başlangıç Tarihi";
+            } else {
+                btnSingle.className = "px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 text-white transition shadow-sm";
+                btnRange.className = "px-3.5 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
+                endContainer.classList.add("hidden");
+                lblStart.textContent = "Rapor Tarihi";
+            }
+            applyFilters();
+        }
+
+        function resetToToday() { setTodayDate(); setFilterMode('single'); }
+
+        function fetchGVizData() {
+            showLoading(true);
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+            fetch(url)
+                .then(res => res.text())
+                .then(rep => {
+                    const jsonString = rep.substring(47, rep.length - 2);
+                    const json = JSON.parse(jsonString);
+                    parseGVizRows(json.table.rows);
+                })
+                .catch(err => console.error("Veri çekme hatası:", err))
+                .finally(() => showLoading(false));
+        }
+
+        function parseGVizRows(rows) {
+            rawData = [];
+            if (rows) {
+                rows.forEach(r => {
+                    const c = r.c;
+                    if (c && c[0] && c[0].v !== null && c[0].v !== undefined) {
+                        let rawDate = c[0].f || c[0].v;
+                        if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
+                            const dateParts = rawDate.match(/\d+/g);
+                            if (dateParts) {
+                                rawDate = `${dateParts[0]}-${String(parseInt(dateParts[1]) + 1).padStart(2, '0')}-${String(dateParts[2]).padStart(2, '0')}`;
+                            }
+                        }
+                        rawData.push({
+                            dateStr: String(rawDate).split('T')[0],
+                            timeStr: c[1] ? c[1].v : "-",
+                            shift: c[2] ? c[2].v : "-",
+                            master: c[3] ? c[3].v : "-",
+                            machine: c[4] ? c[4].v : "-",
+                            operator: c[5] ? c[5].v : "-",
+                            efficiency: c[6] ? parseFloat(c[6].v) || 0 : 0,
+                            description: c[7] ? c[7].v : "-"
+                        });
+                    }
+                });
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const startD = document.getElementById("startDate").value;
+            const endD = document.getElementById("endDate").value;
+
+            if (isRangeMode) {
+                document.getElementById("pdfDateTitle").textContent = `Tarih Aralığı: ${startD} ~ ${endD}`;
+                currentFilteredData = rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD);
+            } else {
+                document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${startD}`;
+                currentFilteredData = rawData.filter(item => item.dateStr === startD);
+            }
+
+            const uniqueSlotsMap = {};
+            currentFilteredData.forEach(d => { uniqueSlotsMap[`${d.dateStr}_${d.machine}_${d.shift}`] = d; });
+            const dedupedData = Object.values(uniqueSlotsMap);
+
+            renderKPIs(dedupedData);
+            renderMatrixTables(currentFilteredData);
+        }
+
+        function renderKPIs(dedupedData) {
+            const count = dedupedData.length;
+            document.getElementById("pdfKpiCount").textContent = count;
+            if (count === 0) {
+                ["pdfKpiAvg", "pdfKpiMax", "pdfKpiMin"].forEach(id => document.getElementById(id).textContent = "%0");
+                return;
+            }
+            const uniqueEffs = dedupedData.map(d => d.efficiency);
+            document.getElementById("pdfKpiAvg").textContent = `%${(uniqueEffs.reduce((a, b) => a + b, 0) / count).toFixed(1)}`;
+            document.getElementById("pdfKpiMax").textContent = `%${Math.max(...uniqueEffs).toFixed(1)}`;
+            document.getElementById("pdfKpiMin").textContent = `%${Math.min(...uniqueEffs).toFixed(1)}`;
+        }
+
+        function renderMatrixTables(data) {
+            const displayBody = document.getElementById("displayMatrixBody");
+            displayBody.innerHTML = "";
+
+            let allShiftA = [], allShiftB = [], allShiftC = [], allDayAvgs = [];
+
+            for (let i = 1; i <= 16; i++) {
+                const machineName = `Fitil - ${i}`;
+                const mEntries = data.filter(d => d.machine === machineName);
+
+                let shiftAObj = getShiftObject(mEntries, "1. Vardiya");
+                let shiftBObj = getShiftObject(mEntries, "2. Vardiya");
+                let shiftCObj = getShiftObject(mEntries, "3. Vardiya");
+
+                let shiftA = shiftAObj ? shiftAObj.efficiency : null;
+                let shiftB = shiftBObj ? shiftBObj.efficiency : null;
+                let shiftC = shiftCObj ? shiftCObj.efficiency : null;
+
+                if (shiftA !== null) allShiftA.push(shiftA);
+                if (shiftB !== null) allShiftB.push(shiftB);
+                if (shiftC !== null) allShiftC.push(shiftC);
+
+                const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
+                let dayAvgText = "-", dayAvgVal = 0;
+                if (validVals.length > 0) {
+                    dayAvgVal = validVals.reduce((a, b) => a + b, 0) / validVals.length;
+                    dayAvgText = `%${dayAvgVal.toFixed(1)}`;
+                    allDayAvgs.push(dayAvgVal);
+                }
+
+                // Hücre içinde: Randıman, Usta, Operatör ve Notlar (Sorunlar) detayları
+                let opAStr = shiftAObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Usta: ${shiftAObj.master} | Op: ${shiftAObj.operators.join(", ")}</div>` : "";
+                if (shiftAObj && shiftAObj.description && shiftAObj.description !== "-") {
+                    opAStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftAObj.description}</div>`;
+                }
+
+                let opBStr = shiftBObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Usta: ${shiftBObj.master} | Op: ${shiftBObj.operators.join(", ")}</div>` : "";
+                if (shiftBObj && shiftBObj.description && shiftBObj.description !== "-") {
+                    opBStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftBObj.description}</div>`;
+                }
+
+                let opCStr = shiftCObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Usta: ${shiftCObj.master} | Op: ${shiftCObj.operators.join(", ")}</div>` : "";
+                if (shiftCObj && shiftCObj.description && shiftCObj.description !== "-") {
+                    opCStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftCObj.description}</div>`;
+                }
+
+                const trDisplay = document.createElement("tr");
+                trDisplay.className = "hover:bg-slate-50 transition border-b border-gray-100";
+                trDisplay.innerHTML = `
+                    <td class="p-2.5 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
+                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}${opAStr}</td>
+                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}${opBStr}</td>
+                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}${opCStr}</td>
+                    <td class="p-2.5 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
+                `;
+                displayBody.appendChild(trDisplay);
+            }
+
+            const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
+            const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
+            const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
+            const totalGeneralAvg = allDayAvgs.length > 0 ? allDayAvgs.reduce((a,b)=>a+b,0)/allDayAvgs.length : null;
+
+            const trSummary = document.createElement("tr");
+            trSummary.className = "bg-slate-900 text-white font-black text-xs uppercase";
+            trSummary.innerHTML = `
+                <td class="p-3 border-r border-slate-700">GENEL ORT.</td>
+                <td class="p-3 border-r border-slate-700">${avgA !== null ? `%${avgA.toFixed(1)}` : '-'}</td>
+                <td class="p-3 border-r border-slate-700">${avgB !== null ? `%${avgB.toFixed(1)}` : '-'}</td>
+                <td class="p-3 border-r border-slate-700">${avgC !== null ? `%${avgC.toFixed(1)}` : '-'}</td>
+                <td class="p-3 bg-indigo-900 text-indigo-200">${totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : '-'}</td>
+            `;
+            displayBody.appendChild(trSummary);
+        }
+
+        function getShiftObject(entries, shiftKeyword) {
+            const matches = entries.filter(e => e.shift.includes(shiftKeyword));
+            if (matches.length === 0) return null;
+            const lastMatch = matches[matches.length - 1];
+            const operators = [...new Set(matches.map(m => m.operator))];
+            return {
+                efficiency: lastMatch.efficiency,
+                operators: operators,
+                master: lastMatch.master,
+                description: lastMatch.description
+            };
+        }
+
+        function formatValue(val) { return val !== null ? `%${val.toFixed(1)}` : "-"; }
+        function getTailwindBg(val, isEmpty = false) {
+            if (val === null || isEmpty) return "text-gray-400 font-normal";
+            if (val >= 70) return "bg-emerald-100 text-emerald-800 font-bold";
+            if (val >= 60) return "bg-amber-100 text-amber-800 font-bold";
+            return "bg-rose-100 text-rose-800 font-bold";
+        }
+
+        function exportToExcel() {
+            const startD = document.getElementById("startDate").value;
+            const endD = document.getElementById("endDate").value;
+            let fileName = `Fitil_Matris_Notlar_Raporu_${startD}.xlsx`;
+
+            const excelData = [["FİTİL MAKİNELERİ MATRİS VE NOTLAR RAPORU"], [isRangeMode ? `Tarih Aralığı: ${startD} ~ ${endD}` : `Rapor Tarihi: ${startD}`], [], ["Fitil No", "A Vardiyası", "B Vardiyası", "C Vardiyası", "Günlük Ortalaması"]];
+
+            let allShiftA = [], allShiftB = [], allShiftC = [], allDayAvgs = [];
+
+            for (let i = 1; i <= 16; i++) {
+                const mEntries = currentFilteredData.filter(d => d.machine === `Fitil - ${i}`);
+                let shiftAObj = getShiftObject(mEntries, "1. Vardiya");
+                let shiftBObj = getShiftObject(mEntries, "2. Vardiya");
+                let shiftCObj = getShiftObject(mEntries, "3. Vardiya");
+
+                let shiftA = shiftAObj ? shiftAObj.efficiency : null;
+                let shiftB = shiftBObj ? shiftBObj.efficiency : null;
+                let shiftC = shiftCObj ? shiftCObj.efficiency : null;
+
+                if (shiftA !== null) allShiftA.push(shiftA);
+                if (shiftB !== null) allShiftB.push(shiftB);
+                if (shiftC !== null) allShiftC.push(shiftC);
+
+                const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
+                let dayAvgVal = validVals.length > 0 ? validVals.reduce((a, b) => a + b, 0) / validVals.length : 0;
+                if (validVals.length > 0) allDayAvgs.push(dayAvgVal);
+
+                excelData.push([
+                    `Fitil - ${i}`,
+                    shiftA !== null ? `%${shiftA.toFixed(1)} (Usta: ${shiftAObj.master})` : "-",
+                    shiftB !== null ? `%${shiftB.toFixed(1)} (Usta: ${shiftBObj.master})` : "-",
+                    shiftC !== null ? `%${shiftC.toFixed(1)} (Usta: ${shiftCObj.master})` : "-",
+                    validVals.length > 0 ? `%${dayAvgVal.toFixed(1)}` : "-"
+                ]);
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            ws['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 20 }];
+            XLSX.utils.book_append_sheet(wb, ws, "Matris ve Notlar");
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function showLoading(show) { document.getElementById("loadingOverlay").style.display = show ? "flex" : "none"; }
+    </script>
+</body>
+</html>
