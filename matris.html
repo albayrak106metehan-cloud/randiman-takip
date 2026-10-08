@@ -112,7 +112,7 @@
         <div id="cardMatrix" class="glass-card p-6 rounded-2xl print-target">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-gray-200">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN, OPERATÖR, USTA & NOTLAR RAPORU</h3>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ MATRİS VE NOTLAR RAPORU</h3>
                     <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
@@ -131,9 +131,18 @@
                     <thead>
                         <tr class="bg-slate-800 text-white font-bold uppercase">
                             <th class="p-2.5 border border-slate-700 w-1/5">FİTİL</th>
-                            <th class="p-2.5 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(08:00 - 16:00)</span></th>
-                            <th class="p-2.5 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(16:00 - 24:00)</span></th>
-                            <th class="p-2.5 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(00:00 - 08:00)</span></th>
+                            <th class="p-2.5 border border-slate-700 w-1/5">
+                                A VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(08:00 - 16:00)</span>
+                                <span id="headerMasterA" class="font-bold text-[10px] text-amber-300 block mt-0.5">Usta: -</span>
+                            </th>
+                            <th class="p-2.5 border border-slate-700 w-1/5">
+                                B VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(16:00 - 24:00)</span>
+                                <span id="headerMasterB" class="font-bold text-[10px] text-amber-300 block mt-0.5">Usta: -</span>
+                            </th>
+                            <th class="p-2.5 border border-slate-700 w-1/5">
+                                C VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(00:00 - 08:00)</span>
+                                <span id="headerMasterC" class="font-bold text-[10px] text-amber-300 block mt-0.5">Usta: -</span>
+                            </th>
                             <th class="p-2.5 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
                         </tr>
                     </thead>
@@ -275,6 +284,7 @@
             displayBody.innerHTML = "";
 
             let allShiftA = [], allShiftB = [], allShiftC = [], allDayAvgs = [];
+            let masterASet = new Set(), masterBSet = new Set(), masterCSet = new Set();
 
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
@@ -288,6 +298,10 @@
                 let shiftB = shiftBObj ? shiftBObj.efficiency : null;
                 let shiftC = shiftCObj ? shiftCObj.efficiency : null;
 
+                if (shiftAObj && shiftAObj.master) masterASet.add(shiftAObj.master);
+                if (shiftBObj && shiftBObj.master) masterBSet.add(shiftBObj.master);
+                if (shiftCObj && shiftCObj.master) masterCSet.add(shiftCObj.master);
+
                 if (shiftA !== null) allShiftA.push(shiftA);
                 if (shiftB !== null) allShiftB.push(shiftB);
                 if (shiftC !== null) allShiftC.push(shiftC);
@@ -300,18 +314,18 @@
                     allDayAvgs.push(dayAvgVal);
                 }
 
-                // Hücre içinde: Randıman, Usta, Operatör ve Notlar (Sorunlar) detayları
-                let opAStr = shiftAObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Usta: ${shiftAObj.master} | Op: ${shiftAObj.operators.join(", ")}</div>` : "";
+                // Hücre içinde sadece Operatör ve Notlar yer alıyor
+                let opAStr = shiftAObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Op: ${shiftAObj.operators.join(", ")}</div>` : "";
                 if (shiftAObj && shiftAObj.description && shiftAObj.description !== "-") {
                     opAStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftAObj.description}</div>`;
                 }
 
-                let opBStr = shiftBObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Usta: ${shiftBObj.master} | Op: ${shiftBObj.operators.join(", ")}</div>` : "";
+                let opBStr = shiftBObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Op: ${shiftBObj.operators.join(", ")}</div>` : "";
                 if (shiftBObj && shiftBObj.description && shiftBObj.description !== "-") {
                     opBStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftBObj.description}</div>`;
                 }
 
-                let opCStr = shiftCObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Usta: ${shiftCObj.master} | Op: ${shiftCObj.operators.join(", ")}</div>` : "";
+                let opCStr = shiftCObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Op: ${shiftCObj.operators.join(", ")}</div>` : "";
                 if (shiftCObj && shiftCObj.description && shiftCObj.description !== "-") {
                     opCStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftCObj.description}</div>`;
                 }
@@ -327,6 +341,11 @@
                 `;
                 displayBody.appendChild(trDisplay);
             }
+
+            // Başlıklara Usta isimlerini yazdırıyoruz
+            document.getElementById("headerMasterA").textContent = `Usta: ${masterASet.size > 0 ? Array.from(masterASet).join(", ") : '-'}`;
+            document.getElementById("headerMasterB").textContent = `Usta: ${masterBSet.size > 0 ? Array.from(masterBSet).join(", ") : '-'}`;
+            document.getElementById("headerMasterC").textContent = `Usta: ${masterCSet.size > 0 ? Array.from(masterCSet).join(", ") : '-'}`;
 
             const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
             const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
@@ -395,16 +414,16 @@
 
                 excelData.push([
                     `Fitil - ${i}`,
-                    shiftA !== null ? `%${shiftA.toFixed(1)} (Usta: ${shiftAObj.master})` : "-",
-                    shiftB !== null ? `%${shiftB.toFixed(1)} (Usta: ${shiftBObj.master})` : "-",
-                    shiftC !== null ? `%${shiftC.toFixed(1)} (Usta: ${shiftCObj.master})` : "-",
+                    shiftA !== null ? `%${shiftA.toFixed(1)}` : "-",
+                    shiftB !== null ? `%${shiftB.toFixed(1)}` : "-",
+                    shiftC !== null ? `%${shiftC.toFixed(1)}` : "-",
                     validVals.length > 0 ? `%${dayAvgVal.toFixed(1)}` : "-"
                 ]);
             }
 
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(excelData);
-            ws['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 20 }];
+            ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }];
             XLSX.utils.book_append_sheet(wb, ws, "Matris ve Notlar");
             XLSX.writeFile(wb, fileName);
         }
