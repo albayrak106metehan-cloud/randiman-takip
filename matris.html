@@ -34,7 +34,7 @@
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Matris & Notlar Raporu</h1>
             </div>
             <div id="headerNavLinks" class="flex items-center gap-2">
-                <!-- Rolüne göre dinamik olarak doldurulacak -->
+                <!-- Rolüne göre dinamik doldurulur -->
             </div>
         </div>
     </header>
@@ -157,15 +157,15 @@
             if (!savedUser) { window.location.href = "index.html"; return; }
             const user = JSON.parse(savedUser);
 
-            // Yetki kontrolü: Giriş yapmış tüm geçerli roller (admin, master, usta) içeri girebilir
+            // Esnek yetki kontrolü: Oturum açmış herkes (admin veya usta) girebilir
             const role = (user.role || "").toLowerCase();
-            if (role !== "admin" && role !== "master" && role !== "usta") {
-                alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır.");
+            if (!role) {
+                alert("⛔ Oturum bilgisi bulunamadı.");
                 window.location.href = "index.html";
                 return;
             }
 
-            setupHeaderNav(user.role);
+            setupHeaderNav(role);
             setTodayDate();
             fetchGVizData();
         });
