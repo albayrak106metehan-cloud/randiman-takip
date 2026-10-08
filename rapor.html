@@ -23,7 +23,6 @@
 
         /* YAZDIRMA (PDF) / WINDOW.PRINT İÇİN ORTALAMA VE YAZICI STİLLERİ */
         @media print {
-            /* Yazdırılmayacak genel öğeler */
             header, .no-print, #loadingOverlay {
                 display: none !important;
             }
@@ -39,7 +38,6 @@
                 margin: 10mm;
             }
 
-            /* Seçilen Kartı A4 Sayfasının Tam Ortasına Hizalama */
             .print-target {
                 display: block !important;
                 width: 100% !important;
@@ -50,7 +48,6 @@
                 page-break-inside: avoid;
             }
 
-            /* Yazdırılmayan kartları gizleme mantığı (JS sınıfı ile kontrol edilir) */
             body.printing-single-card .glass-card:not(.print-target) {
                 display: none !important;
             }
@@ -287,7 +284,6 @@
         Chart.register(ChartDataLabels);
 
         document.addEventListener("DOMContentLoaded", function() {
-            // Yetki Kontrolü (Sadece Adminler)
             const savedUser = localStorage.getItem("fitil_active_user");
             if (!savedUser) {
                 window.location.href = "index.html";
@@ -434,10 +430,11 @@
         }
 
         function renderCharts(data) {
-            const masterMap = groupByAverage(data, 'master');
+            // Usta ve Operatörler için aynı vardiyada birden fazla makineye bakma durumunda tekilleştirme ve ortalama alma
+            const masterMap = getGroupedAveragesByShiftPerson(data, 'master');
             masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
 
-            const opMap = groupByAverage(data, 'operator');
+            const opMap = getGroupedAveragesByShiftPerson(data, 'operator');
             const sortedOperators = Object.keys(opMap).sort((a,b) => parseFloat(opMap[b]) - parseFloat(opMap[a]));
             const sortedValues = sortedOperators.map(k => opMap[k]);
 
@@ -460,6 +457,41 @@
 
             const shiftMap = groupByAverage(data, 'shift');
             shiftChartInstance = createBarChart('shiftChart', shiftChartInstance, Object.keys(shiftMap), Object.values(shiftMap), 'Vardiya Randımanı (%)', '#8b5cf6');
+        }
+
+        // Aynı vardiyada aynı kişinin (usta veya operatör) birden fazla makineye bakması durumunda;
+        // önce vardiya bazlı ortalamalarını alıp, sonra genel kişisel ortalamasına ulaşıyoruz.
+        function getGroupedAveragesByShiftPerson(data, key) {
+            const shiftPersonMap = {};
+
+            // 1. Adım: Her kişinin her vardiyadaki (tarih + vardiya + kişi) ortalama randımanını bul
+            data.forEach(d => {
+                const person = d[key] || 'Belirtilmemiş';
+                const groupKey = `${d.dateStr}_${d.shift}_${person}`;
+
+                if (!shiftPersonMap[groupKey]) {
+                    shiftPersonMap[groupKey] = { person: person, totalEff: 0, count: 0 };
+                }
+                shiftPersonMap[groupKey].totalEff += d.efficiency;
+                shiftPersonMap[groupKey].count += 1;
+            });
+
+            // Vardiya bazlı tekilleştirilmiş ortalamaları birleştir
+            const personFinalMap = {};
+            const personCounts = {};
+
+            Object.values(shiftPersonMap).forEach(item => {
+                const shiftAvg = item.totalEff / item.count;
+                personFinalMap[item.person] = (personFinalMap[item.person] || 0) + shiftAvg;
+                personCounts[item.person] = (personCounts[item.person] || 0) + 1;
+            });
+
+            const finalResult = {};
+            Object.keys(personFinalMap).forEach(p => {
+                finalResult[p] = (personFinalMap[p] / personCounts[p]).toFixed(1);
+            });
+
+            return finalResult;
         }
 
         function groupByAverage(data, key) {
