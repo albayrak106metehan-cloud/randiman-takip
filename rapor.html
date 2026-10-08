@@ -118,7 +118,7 @@
         <!-- KPI ÖZET KARTLARI -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
             <div class="glass-card p-4 rounded-2xl text-center">
-                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Kayıt</span>
+                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Kayıt (Makine-Vardiya)</span>
                 <p id="kpiRecordCount" class="text-2xl font-black text-slate-800 mt-1">0</p>
             </div>
             <div class="glass-card p-4 rounded-2xl text-center">
@@ -226,7 +226,7 @@
             <!-- PDF/EKRAN İÇİNDEKİ MİNİ KPI KARTLARI -->
             <div class="grid grid-cols-4 gap-3 mb-6">
                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase block">KAYIT</span>
+                    <span class="text-[10px] text-gray-500 font-bold uppercase block">KAYIT (MAKİNE-VARDİYA)</span>
                     <span id="pdfKpiCount" class="text-base font-black text-slate-800">0</span>
                 </div>
                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
@@ -404,7 +404,16 @@
         }
 
         function renderKPIs(data) {
-            const count = data.length;
+            // Aynı makine ve vardiya için birden fazla kayıt varsa, son girileni baz alarak benzersiz (Makine + Vardiya) slot sayısını hesapla
+            const uniqueSlotsMap = {};
+            data.forEach(d => {
+                const slotKey = `${d.dateStr}_${d.machine}_${d.shift}`;
+                uniqueSlotsMap[slotKey] = d.efficiency; // Son gelen üzerine yazarak tekilleştirir
+            });
+
+            const uniqueEffs = Object.values(uniqueSlotsMap);
+            const count = uniqueEffs.length;
+
             document.getElementById("kpiRecordCount").textContent = count;
             document.getElementById("pdfKpiCount").textContent = count;
 
@@ -415,10 +424,9 @@
                 return;
             }
 
-            const effs = data.map(d => d.efficiency);
-            const avg = (effs.reduce((a, b) => a + b, 0) / count).toFixed(1);
-            const max = Math.max(...effs).toFixed(1);
-            const min = Math.min(...effs).toFixed(1);
+            const avg = (uniqueEffs.reduce((a, b) => a + b, 0) / count).toFixed(1);
+            const max = Math.max(...uniqueEffs).toFixed(1);
+            const min = Math.min(...uniqueEffs).toFixed(1);
 
             document.getElementById("kpiAvgEfficiency").textContent = `%${avg}`;
             document.getElementById("kpiMaxEfficiency").textContent = `%${max}`;
@@ -546,7 +554,9 @@
 
             const ctx = document.getElementById(canvasId).getContext('2d');
             return new Chart(ctx, {
-                type: 'bar',
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
                 data: {
                     labels: labels,
                     datasets: [{
@@ -610,7 +620,6 @@
                     allDayAvgs.push(dayAvgVal);
                 }
 
-                // Sadece tek günlük görünümdeyse operatör isimlerini göster
                 let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftAObj.operators.join(", ")}</span>` : "";
                 let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftBObj.operators.join(", ")}</span>` : "";
                 let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftCObj.operators.join(", ")}</span>` : "";
@@ -627,7 +636,6 @@
                 displayBody.appendChild(trDisplay);
             }
 
-            // GENEL ORTALAMA SATIRI (EN ALT)
             const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
             const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
             const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
@@ -649,9 +657,7 @@
             const matches = entries.filter(e => e.shift.includes(shiftKeyword));
             if (matches.length === 0) return null;
 
-            // Son kaydı baz alıyoruz
             const lastMatch = matches[matches.length - 1];
-            // Aynı vardiyada bu makineye bakan tüm benzersiz operatörleri topla
             const operators = [...new Set(matches.map(m => m.operator))];
 
             return {
