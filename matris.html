@@ -33,23 +33,8 @@
                 <span class="text-2xl">📊</span>
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Matris & Notlar Raporu</h1>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                    📝 Veri Girişi
-                </a>
-                <a href="rapor.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                    📈 Grafik & Analiz
-                </a>
-                <a href="matris.html" class="bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md flex items-center gap-1.5">
-                    📊 Matris Raporu ✓
-                </a>
-                <a href="makineler.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                    🖥️ Makineler
-                </a>
-                <div class="h-6 w-px bg-slate-700 mx-1"></div>
-                <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                    🚪 Çıkış Yap
-                </button>
+            <div id="headerNavLinks" class="flex items-center gap-2">
+                <!-- Rolüne göre dinamik olarak doldurulacak -->
             </div>
         </div>
     </header>
@@ -171,11 +156,38 @@
             const savedUser = localStorage.getItem("fitil_active_user");
             if (!savedUser) { window.location.href = "index.html"; return; }
             const user = JSON.parse(savedUser);
-            if (user.role !== "admin") { alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır."); window.location.href = "index.html"; return; }
 
+            // Yetki kontrolü: Sadece 'admin' veya 'master' girebilir
+            if (user.role !== "admin" && user.role !== "master") {
+                alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            setupHeaderNav(user.role);
             setTodayDate();
             fetchGVizData();
         });
+
+        function setupHeaderNav(role) {
+            const navContainer = document.getElementById("headerNavLinks");
+            let html = `<a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">📝 Veri Girişi</a>`;
+            
+            if (role === "admin") {
+                html += `<a href="rapor.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">📈 Grafik & Analiz</a>`;
+            }
+
+            html += `<a href="matris.html" class="bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md flex items-center gap-1.5">📊 Matris Raporu ✓</a>`;
+
+            if (role === "admin") {
+                html += `<a href="makineler.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">🖥️ Makineler</a>`;
+            }
+
+            html += `<div class="h-6 w-px bg-slate-700 mx-1"></div>
+                     <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">🚪 Çıkış Yap</button>`;
+
+            navContainer.innerHTML = html;
+        }
 
         function handleLogout() { localStorage.removeItem("fitil_active_user"); window.location.href = "index.html"; }
         function setTodayDate() { const today = new Date().toISOString().split('T')[0]; document.getElementById("startDate").value = today; document.getElementById("endDate").value = today; }
@@ -314,7 +326,6 @@
                     allDayAvgs.push(dayAvgVal);
                 }
 
-                // Hücre içinde sadece Operatör ve Notlar yer alıyor
                 let opAStr = shiftAObj ? `<div class="text-[10px] text-slate-600 font-medium mt-0.5">Op: ${shiftAObj.operators.join(", ")}</div>` : "";
                 if (shiftAObj && shiftAObj.description && shiftAObj.description !== "-") {
                     opAStr += `<div class="text-[9px] text-rose-600 font-semibold mt-0.5 italic">Not: ${shiftAObj.description}</div>`;
@@ -342,7 +353,6 @@
                 displayBody.appendChild(trDisplay);
             }
 
-            // Başlıklara Usta isimlerini yazdırıyoruz
             document.getElementById("headerMasterA").textContent = `Usta: ${masterASet.size > 0 ? Array.from(masterASet).join(", ") : '-'}`;
             document.getElementById("headerMasterB").textContent = `Usta: ${masterBSet.size > 0 ? Array.from(masterBSet).join(", ") : '-'}`;
             document.getElementById("headerMasterC").textContent = `Usta: ${masterCSet.size > 0 ? Array.from(masterCSet).join(", ") : '-'}`;
