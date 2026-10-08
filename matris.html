@@ -157,10 +157,10 @@
             if (!savedUser) { window.location.href = "index.html"; return; }
             const user = JSON.parse(savedUser);
 
-            // Esnek yetki kontrolü: Oturum açmış herkes (admin veya usta) girebilir
+            // Usta ve Admin rollerini eksiksiz destekleyen kontrol
             const role = (user.role || "").toLowerCase();
-            if (!role) {
-                alert("⛔ Oturum bilgisi bulunamadı.");
+            if (role !== "admin" && role !== "usta" && role !== "master") {
+                alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır.");
                 window.location.href = "index.html";
                 return;
             }
