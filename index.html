@@ -76,16 +76,17 @@
             <div class="glass-card p-6 md:p-8 rounded-2xl relative">
                 <h2 class="text-lg font-bold text-slate-800 border-b border-gray-100 pb-3 mb-6 flex items-center justify-between">
                     <span id="formTitle">📌 Randıman Kayıt Formu</span>
-                    <button id="btnCancelEdit" onclick="cancelEditMode()" class="hidden text-xs bg-rose-100 text-rose-700 px-2.5 py-1 rounded-lg font-semibold hover:bg-rose-200 transition">Düzenlemeden Vazgeç</button>
+                    <button id="btnCancelEdit" type="button" onclick="cancelEditMode()" class="hidden text-xs bg-rose-100 text-rose-700 px-2.5 py-1 rounded-lg font-semibold hover:bg-rose-200 transition">Düzenlemeden Vazgeç</button>
                 </h2>
 
                 <div id="successBanner" class="hidden mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all">
                     <span>✅</span>
-                    <span id="successMessage">Veri başarıyla kaydedildi ve listeye eklendi!</span>
+                    <span id="successMessage">İşlem başarıyla gerçekleştirildi!</span>
                 </div>
 
                 <form id="entryForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
                     <input type="hidden" id="editRowIndex" value="">
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 mb-1">Tarih</label>
@@ -150,7 +151,7 @@
                 </form>
             </div>
 
-            <!-- KAYITLAR LİSTESİ (Kullanıcı veya Yöneticiye Göre Değişir) -->
+            <!-- KAYITLAR LİSTESİ -->
             <div class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
                     <h3 id="tableHeaderTitle" class="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -202,7 +203,7 @@
         ];
 
         let currentUser = null;
-        let globalAllRows = []; // Tüm satırları saklamak için
+        let globalAllRows = [];
 
         document.addEventListener("DOMContentLoaded", function() {
             checkSession();
@@ -271,7 +272,7 @@
         }
 
         function setInitialDateTime() {
-            if (document.getElementById("editRowIndex").value !== "") return; // Düzenleme modunda saati ezme
+            if (document.getElementById("editRowIndex").value !== "") return;
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -331,10 +332,6 @@
                 showSuccessBanner(isEditing ? "Kayıt başarıyla güncellendi!" : "Veri başarıyla kaydedildi ve alt listeye eklendi!");
 
                 cancelEditMode();
-                document.getElementById("entryForm").reset();
-                document.getElementById("inputMaster").value = currentUser.name;
-                setInitialDateTime();
-                
                 setTimeout(fetchUserLogs, 2500);
             })
             .catch(err => {
@@ -420,7 +417,6 @@
                         const dateStr = String(rawDate).split('T')[0];
                         const timeStr = c[1] ? String(c[1].v) : "00:00";
                         
-                        // Son 24 saat kontrolü için timestamp oluştur
                         let recordTimestamp = new Date(`${dateStr}T${timeStr.length === 5 ? timeStr : '00:00'}`).getTime();
                         if (isNaN(recordTimestamp)) {
                             recordTimestamp = new Date(dateStr).getTime();
@@ -432,7 +428,7 @@
                         const currentMName = currentUser.name.toLowerCase();
 
                         const itemObj = {
-                            sheetRowIndex: idx + 2, // Google Sheets 1 tabanlıdır ve 1. satır başlık olduğu için veri 2'den başlar
+                            sheetRowIndex: idx + 2, // Google Sheets 2. satırdan başlar (1. satır başlık)
                             dateStr: dateStr,
                             timeStr: timeStr,
                             shift: c[2] ? c[2].v : "-",
@@ -448,12 +444,10 @@
                         const isWithin24Hours = (nowTime - recordTimestamp) <= twentyFourHoursMs;
 
                         if (currentUser.role === 'admin') {
-                            // Yönetici için son 24 saat içindeki HERKESİN kaydı
                             if (isWithin24Hours) {
                                 displayedEntries.push(itemObj);
                             }
                         } else {
-                            // Usta için sadece kendi kayıtları
                             if (recordUser === currentUName || recordMaster === currentMName) {
                                 displayedEntries.push(itemObj);
                             }
@@ -488,9 +482,10 @@
                 `;
 
                 if (currentUser.role === 'admin') {
+                    const originalIndex = globalAllRows.findIndex(x => x.sheetRowIndex === item.sheetRowIndex);
                     rowHtml += `
                         <td class="p-2.5">
-                            <button onclick="editRecord(${globalAllRows.findIndex(x => x.sheetRowIndex === item.sheetRowIndex)})" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-1.5 rounded-lg transition font-bold" title="Bu kaydı düzenle">
+                            <button type="button" onclick="editRecord(${originalIndex})" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-1.5 rounded-lg transition font-bold" title="Bu kaydı düzenle">
                                 ✏️
                             </button>
                         </td>
