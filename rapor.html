@@ -21,7 +21,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
-        /* YAZDIRMA (PDF) / WINDOW.PRINT İÇİN ORTALAMA VE YAZICI STİLLERİ */
+        /* YAZDIRMA (PDF) / WINDOW.PRINT İÇİN TEK SAYFAYA SIĞDIRMA STİLLERİ */
         @media print {
             header, .no-print, #loadingOverlay {
                 display: none !important;
@@ -31,25 +31,34 @@
                 background-color: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             @page {
                 size: A4 portrait;
-                margin: 10mm;
+                margin: 5mm;
             }
 
             .print-target {
                 display: block !important;
                 width: 100% !important;
-                max-width: 750px !important;
-                margin: auto !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 10px !important;
                 box-shadow: none !important;
-                border: 1px solid #cbd5e1 !important;
+                border: none !important;
                 page-break-inside: avoid;
+                break-inside: avoid;
             }
 
             body.printing-single-card .glass-card:not(.print-target) {
                 display: none !important;
+            }
+
+            #matrixTable th, #matrixTable td {
+                padding: 4px 6px !important;
+                font-size: 10px !important;
             }
         }
     </style>
@@ -136,14 +145,14 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 1: USTA & OPERATÖR PERFORMANSLARI -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             <!-- USTA KARTI -->
             <div id="cardMaster" class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                         👨‍🔧 Usta Bazlı Ort. Randıman (%)
                     </h3>
-                    <button onclick="printCard('cardMaster')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                    <button onclick="printCard('cardMaster')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -161,7 +170,7 @@
                         </h3>
                         <span class="text-[11px] text-gray-400 font-medium">(Yüksekten Düşüğe)</span>
                     </div>
-                    <button onclick="printCard('cardOperator')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                    <button onclick="printCard('cardOperator')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -174,14 +183,14 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 2: MAKİNE VE VARDİYA GRAFİKLERİ -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             <!-- MAKİNE KARTI -->
             <div id="cardMachine" class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                         ⚡ Makine Ortalamaları (%)
                     </h3>
-                    <button onclick="printCard('cardMachine')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                    <button onclick="printCard('cardMachine')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -196,7 +205,7 @@
                     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                         🕒 Vardiya Ortalamaları (%)
                     </h3>
-                    <button onclick="printCard('cardShift')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
+                    <button onclick="printCard('cardShift')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -208,10 +217,10 @@
 
         <!-- EKRANDA GÖRÜNEN KART VE İNDİRME BUTONLARI -->
         <div id="cardMatrix" class="glass-card p-6 rounded-2xl">
-            <div class="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-200">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-gray-200">
                 <div>
                     <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h3>
-                    <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-1"></p>
+                    <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
                     <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
@@ -224,35 +233,35 @@
             </div>
 
             <!-- PDF/EKRAN İÇİNDEKİ MİNİ KPI KARTLARI -->
-            <div class="grid grid-cols-4 gap-3 mb-6">
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase block">KAYIT (MAKİNE-VARDİYA)</span>
-                    <span id="pdfKpiCount" class="text-base font-black text-slate-800">0</span>
+            <div class="grid grid-cols-4 gap-3 mb-4">
+                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[9px] text-gray-500 font-bold uppercase block">KAYIT (MAKİNE-VARDİYA)</span>
+                    <span id="pdfKpiCount" class="text-sm font-black text-slate-800">0</span>
                 </div>
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase block">GENEL ORT.</span>
-                    <span id="pdfKpiAvg" class="text-base font-black text-indigo-600">%0</span>
+                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[9px] text-gray-500 font-bold uppercase block">GENEL ORT.</span>
+                    <span id="pdfKpiAvg" class="text-sm font-black text-indigo-600">%0</span>
                 </div>
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase block">EN YÜKSEK</span>
-                    <span id="pdfKpiMax" class="text-base font-black text-emerald-600">%0</span>
+                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[9px] text-gray-500 font-bold uppercase block">EN YÜKSEK</span>
+                    <span id="pdfKpiMax" class="text-sm font-black text-emerald-600">%0</span>
                 </div>
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase block">EN DÜŞÜK</span>
-                    <span id="pdfKpiMin" class="text-base font-black text-rose-600">%0</span>
+                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[9px] text-gray-500 font-bold uppercase block">EN DÜŞÜK</span>
+                    <span id="pdfKpiMin" class="text-sm font-black text-rose-600">%0</span>
                 </div>
             </div>
 
             <!-- TABLO -->
             <div class="overflow-x-auto">
-                <table id="matrixTable" class="w-full text-center border-collapse text-sm">
+                <table id="matrixTable" class="w-full text-center border-collapse text-xs">
                     <thead>
-                        <tr class="bg-slate-800 text-white font-bold text-xs uppercase">
-                            <th class="p-3 border border-slate-700 w-1/5">FİTİL</th>
-                            <th class="p-3 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(08:00 - 16:00)</span></th>
-                            <th class="p-3 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(16:00 - 24:00)</span></th>
-                            <th class="p-3 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[10px] text-slate-300 block">(00:00 - 08:00)</span></th>
-                            <th class="p-3 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
+                        <tr class="bg-slate-800 text-white font-bold uppercase">
+                            <th class="p-2 border border-slate-700 w-1/5">FİTİL</th>
+                            <th class="p-2 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(08:00 - 16:00)</span></th>
+                            <th class="p-2 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(16:00 - 24:00)</span></th>
+                            <th class="p-2 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(00:00 - 08:00)</span></th>
+                            <th class="p-2 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
                         </tr>
                     </thead>
                     <tbody id="displayMatrixBody" class="divide-y divide-gray-200 font-semibold text-xs">
@@ -398,21 +407,21 @@
                 currentFilteredData = rawData.filter(item => item.dateStr === startD);
             }
 
-            renderKPIs(currentFilteredData);
-            renderCharts(currentFilteredData);
-            renderMatrixTables(currentFilteredData);
+            // Aynı makine ve vardiya için mükerrer kayıtları temizleyip tekilleştirilmiş temiz veri seti üretiyoruz
+            const uniqueSlotsMap = {};
+            currentFilteredData.forEach(d => {
+                const slotKey = `${d.dateStr}_${d.machine}_${d.shift}`;
+                uniqueSlotsMap[slotKey] = d; // Son girilen kaydı tutar
+            });
+            const dedupedData = Object.values(uniqueSlotsMap);
+
+            renderKPIs(dedupedData);
+            renderCharts(dedupedData);
+            renderMatrixTables(currentFilteredData); // Tablo kendi içinde vardiya nesnelerini son kayda göre ele alıyor
         }
 
-        function renderKPIs(data) {
-            const uniqueSlotsMap = {};
-            data.forEach(d => {
-                const slotKey = `${d.dateStr}_${d.machine}_${d.shift}`;
-                uniqueSlotsMap[slotKey] = d.efficiency;
-            });
-
-            const uniqueEffs = Object.values(uniqueSlotsMap);
-            const count = uniqueEffs.length;
-
+        function renderKPIs(dedupedData) {
+            const count = dedupedData.length;
             document.getElementById("kpiRecordCount").textContent = count;
             document.getElementById("pdfKpiCount").textContent = count;
 
@@ -423,6 +432,7 @@
                 return;
             }
 
+            const uniqueEffs = dedupedData.map(d => d.efficiency);
             const avg = (uniqueEffs.reduce((a, b) => a + b, 0) / count).toFixed(1);
             const max = Math.max(...uniqueEffs).toFixed(1);
             const min = Math.min(...uniqueEffs).toFixed(1);
@@ -436,11 +446,12 @@
             document.getElementById("pdfKpiMin").textContent = `%${min}`;
         }
 
-        function renderCharts(data) {
-            const masterMap = getGroupedAveragesByShiftPerson(data, 'master');
+        function renderCharts(dedupedData) {
+            // Usta ve operatör ortalamaları da artık tekilleştirilmiş (aynı vardiya-makine için son kayıt) veri üzerinden hesaplanıyor
+            const masterMap = getGroupedAveragesByShiftPerson(dedupedData, 'master');
             masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
 
-            const opMap = getGroupedAveragesByShiftPerson(data, 'operator');
+            const opMap = getGroupedAveragesByShiftPerson(dedupedData, 'operator');
             const sortedOperators = Object.keys(opMap).sort((a,b) => parseFloat(opMap[b]) - parseFloat(opMap[a]));
             const sortedValues = sortedOperators.map(k => opMap[k]);
 
@@ -451,7 +462,7 @@
             for(let i=1; i<=16; i++){
                 const mName = `Fitil - ${i}`;
                 mLabels.push(`${i}`);
-                const match = data.filter(d => d.machine === mName);
+                const match = dedupedData.filter(d => d.machine === mName);
                 if(match.length > 0) {
                     const avg = match.reduce((a,b)=>a+b.efficiency,0)/match.length;
                     mData.push(avg.toFixed(1));
@@ -461,35 +472,23 @@
             }
             machineChartInstance = createBarChart('machineChart', machineChartInstance, mLabels, mData, 'Makine Randımanı (%)', '#f59e0b');
 
-            const shiftMap = groupByAverage(data, 'shift');
+            const shiftMap = groupByAverage(dedupedData, 'shift');
             shiftChartInstance = createBarChart('shiftChart', shiftChartInstance, Object.keys(shiftMap), Object.values(shiftMap), 'Vardiya Randımanı (%)', '#8b5cf6');
         }
 
-        function getGroupedAveragesByShiftPerson(data, key) {
-            const shiftPersonMap = {};
-            data.forEach(d => {
-                const person = d[key] || 'Belirtilmemiş';
-                const groupKey = `${d.dateStr}_${d.shift}_${person}`;
-
-                if (!shiftPersonMap[groupKey]) {
-                    shiftPersonMap[groupKey] = { person: person, totalEff: 0, count: 0 };
-                }
-                shiftPersonMap[groupKey].totalEff += d.efficiency;
-                shiftPersonMap[groupKey].count += 1;
-            });
-
-            const personFinalMap = {};
+        function getGroupedAveragesByShiftPerson(dedupedData, key) {
+            const personMap = {};
             const personCounts = {};
 
-            Object.values(shiftPersonMap).forEach(item => {
-                const shiftAvg = item.totalEff / item.count;
-                personFinalMap[item.person] = (personFinalMap[item.person] || 0) + shiftAvg;
-                personCounts[item.person] = (personCounts[item.person] || 0) + 1;
+            dedupedData.forEach(d => {
+                const person = d[key] || 'Belirtilmemiş';
+                personMap[person] = (personMap[person] || 0) + d.efficiency;
+                personCounts[person] = (personCounts[person] || 0) + 1;
             });
 
             const finalResult = {};
-            Object.keys(personFinalMap).forEach(p => {
-                finalResult[p] = (personFinalMap[p] / personCounts[p]).toFixed(1);
+            Object.keys(personMap).forEach(p => {
+                finalResult[p] = (personMap[p] / personCounts[p]).toFixed(1);
             });
 
             return finalResult;
@@ -617,19 +616,18 @@
                     allDayAvgs.push(dayAvgVal);
                 }
 
-                // Emoji kaldırıldı ve daha sade hale getirildi
-                let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-medium mt-0.5">${shiftAObj.operators.join(", ")}</span>` : "";
-                let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-medium mt-0.5">${shiftBObj.operators.join(", ")}</span>` : "";
-                let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-medium mt-0.5">${shiftCObj.operators.join(", ")}</span>` : "";
+                let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[9px] text-slate-500 font-medium mt-0.5">${shiftAObj.operators.join(", ")}</span>` : "";
+                let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[9px] text-slate-500 font-medium mt-0.5">${shiftBObj.operators.join(", ")}</span>` : "";
+                let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[9px] text-slate-500 font-medium mt-0.5">${shiftCObj.operators.join(", ")}</span>` : "";
 
                 const trDisplay = document.createElement("tr");
                 trDisplay.className = "hover:bg-slate-50 transition border-b border-gray-100";
                 trDisplay.innerHTML = `
-                    <td class="p-2.5 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
-                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}${opAStr}</td>
-                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}${opBStr}</td>
-                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}${opCStr}</td>
-                    <td class="p-2.5 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
+                    <td class="p-2 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
+                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}${opAStr}</td>
+                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}${opBStr}</td>
+                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}${opCStr}</td>
+                    <td class="p-2 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
                 `;
                 displayBody.appendChild(trDisplay);
             }
@@ -642,11 +640,11 @@
             const trSummary = document.createElement("tr");
             trSummary.className = "bg-slate-900 text-white font-black text-xs uppercase";
             trSummary.innerHTML = `
-                <td class="p-3 border-r border-slate-700">GENEL ORT.</td>
-                <td class="p-3 border-r border-slate-700">${avgA !== null ? `%${avgA.toFixed(1)}` : '-'}</td>
-                <td class="p-3 border-r border-slate-700">${avgB !== null ? `%${avgB.toFixed(1)}` : '-'}</td>
-                <td class="p-3 border-r border-slate-700">${avgC !== null ? `%${avgC.toFixed(1)}` : '-'}</td>
-                <td class="p-3 bg-indigo-900 text-indigo-200">${totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : '-'}</td>
+                <td class="p-2 border-r border-slate-700">GENEL ORT.</td>
+                <td class="p-2 border-r border-slate-700">${avgA !== null ? `%${avgA.toFixed(1)}` : '-'}</td>
+                <td class="p-2 border-r border-slate-700">${avgB !== null ? `%${avgB.toFixed(1)}` : '-'}</td>
+                <td class="p-2 border-r border-slate-700">${avgC !== null ? `%${avgC.toFixed(1)}` : '-'}</td>
+                <td class="p-2 bg-indigo-900 text-indigo-200">${totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : '-'}</td>
             `;
             displayBody.appendChild(trSummary);
         }
