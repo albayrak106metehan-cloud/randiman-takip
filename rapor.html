@@ -430,7 +430,6 @@
         }
 
         function renderCharts(data) {
-            // Usta ve Operatörler için aynı vardiyada birden fazla makineye bakma durumunda tekilleştirme ve ortalama alma
             const masterMap = getGroupedAveragesByShiftPerson(data, 'master');
             masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
 
@@ -459,12 +458,8 @@
             shiftChartInstance = createBarChart('shiftChart', shiftChartInstance, Object.keys(shiftMap), Object.values(shiftMap), 'Vardiya Randımanı (%)', '#8b5cf6');
         }
 
-        // Aynı vardiyada aynı kişinin (usta veya operatör) birden fazla makineye bakması durumunda;
-        // önce vardiya bazlı ortalamalarını alıp, sonra genel kişisel ortalamasına ulaşıyoruz.
         function getGroupedAveragesByShiftPerson(data, key) {
             const shiftPersonMap = {};
-
-            // 1. Adım: Her kişinin her vardiyadaki (tarih + vardiya + kişi) ortalama randımanını bul
             data.forEach(d => {
                 const person = d[key] || 'Belirtilmemiş';
                 const groupKey = `${d.dateStr}_${d.shift}_${person}`;
@@ -476,7 +471,6 @@
                 shiftPersonMap[groupKey].count += 1;
             });
 
-            // Vardiya bazlı tekilleştirilmiş ortalamaları birleştir
             const personFinalMap = {};
             const personCounts = {};
 
@@ -586,6 +580,11 @@
             const displayBody = document.getElementById("displayMatrixBody");
             displayBody.innerHTML = "";
 
+            let allShiftA = [];
+            let allShiftB = [];
+            let allShiftC = [];
+            let allDayAvgs = [];
+
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
                 const mEntries = data.filter(d => d.machine === machineName);
@@ -594,12 +593,17 @@
                 let shiftB = getShiftValue(mEntries, "2. Vardiya");
                 let shiftC = getShiftValue(mEntries, "3. Vardiya");
 
+                if (shiftA !== null) allShiftA.push(shiftA);
+                if (shiftB !== null) allShiftB.push(shiftB);
+                if (shiftC !== null) allShiftC.push(shiftC);
+
                 const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
                 let dayAvgText = "-";
                 let dayAvgVal = 0;
                 if (validVals.length > 0) {
                     dayAvgVal = validVals.reduce((a, b) => a + b, 0) / validVals.length;
                     dayAvgText = `%${dayAvgVal.toFixed(1)}`;
+                    allDayAvgs.push(dayAvgVal);
                 }
 
                 const trDisplay = document.createElement("tr");
@@ -613,6 +617,23 @@
                 `;
                 displayBody.appendChild(trDisplay);
             }
+
+            // GENEL ORTALAMA SATIRI (EN ALT)
+            const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
+            const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
+            const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
+            const totalGeneralAvg = allDayAvgs.length > 0 ? allDayAvgs.reduce((a,b)=>a+b,0)/allDayAvgs.length : null;
+
+            const trSummary = document.createElement("tr");
+            trSummary.className = "bg-slate-900 text-white font-black text-xs uppercase";
+            trSummary.innerHTML = `
+                <td class="p-3 border-r border-slate-700">GENEL ORT.</td>
+                <td class="p-3 border-r border-slate-700">${avgA !== null ? `%${avgA.toFixed(1)}` : '-'}</td>
+                <td class="p-3 border-r border-slate-700">${avgB !== null ? `%${avgB.toFixed(1)}` : '-'}</td>
+                <td class="p-3 border-r border-slate-700">${avgC !== null ? `%${avgC.toFixed(1)}` : '-'}</td>
+                <td class="p-3 bg-indigo-900 text-indigo-200">${totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : '-'}</td>
+            `;
+            displayBody.appendChild(trSummary);
         }
 
         function getShiftValue(entries, shiftKeyword) {
@@ -660,6 +681,11 @@
 
             excelData.push(["Fitil No", "A Vardiyası (08:00-16:00)", "B Vardiyası (16:00-24:00)", "C Vardiyası (00:00-08:00)", "Günlük Ortalaması"]);
 
+            let allShiftA = [];
+            let allShiftB = [];
+            let allShiftC = [];
+            let allDayAvgs = [];
+
             for (let i = 1; i <= 16; i++) {
                 const machineName = `Fitil - ${i}`;
                 const mEntries = currentFilteredData.filter(d => d.machine === machineName);
@@ -668,17 +694,41 @@
                 let shiftB = getShiftValue(mEntries, "2. Vardiya");
                 let shiftC = getShiftValue(mEntries, "3. Vardiya");
 
+                if (shiftA !== null) allShiftA.push(shiftA);
+                if (shiftB !== null) allShiftB.push(shiftB);
+                if (shiftC !== null) allShiftC.push(shiftC);
+
                 const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
-                let dayAvg = validVals.length > 0 ? (validVals.reduce((a, b) => a + b, 0) / validVals.length).toFixed(1) + "%" : "-";
+                let dayAvgVal = 0;
+                let dayAvgText = "-";
+                if (validVals.length > 0) {
+                    dayAvgVal = validVals.reduce((a, b) => a + b, 0) / validVals.length;
+                    dayAvgText = `%${dayAvgVal.toFixed(1)}`;
+                    allDayAvgs.push(dayAvgVal);
+                }
 
                 excelData.push([
                     `Fitil - ${i}`,
                     shiftA !== null ? `%${shiftA.toFixed(1)}` : "-",
                     shiftB !== null ? `%${shiftB.toFixed(1)}` : "-",
                     shiftC !== null ? `%${shiftC.toFixed(1)}` : "-",
-                    dayAvg
+                    dayAvgText
                 ]);
             }
+
+            // Excel'e de genel ortalama satırı ekleniyor
+            const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
+            const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
+            const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
+            const totalGeneralAvg = allDayAvgs.length > 0 ? allDayAvgs.reduce((a,b)=>a+b,0)/allDayAvgs.length : null;
+
+            excelData.push([
+                "GENEL ORT.",
+                avgA !== null ? `%${avgA.toFixed(1)}` : "-",
+                avgB !== null ? `%${avgB.toFixed(1)}` : "-",
+                avgC !== null ? `%${avgC.toFixed(1)}` : "-",
+                totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : "-"
+            ]);
 
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(excelData);
