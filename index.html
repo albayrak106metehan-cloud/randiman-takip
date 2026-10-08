@@ -52,21 +52,9 @@
                         <p class="text-[11px] text-indigo-300">Giriş Yapan: <span id="currentUserSpan" class="font-bold text-white"></span> (<span id="userRoleSpan" class="text-emerald-400"></span>)</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a id="navVeriGiris" href="index.html" class="hidden bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md items-center gap-1.5">
-                        📝 Veri Girişi ✓
-                    </a>
-                    <a id="navRaporlar" href="rapor.html" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                        📊 Raporlar
-                    </a>
-                    <a id="navMakineler" href="makineler.html" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                        🖥️ Makineler
-                    </a>
-                    <div id="navDivider" class="hidden h-6 w-px bg-slate-700 mx-1"></div>
-                    
-                    <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
-                        🚪 Çıkış Yap
-                    </button>
+                <!-- Sağ Üst Navigasyon Menüsü (Rol Bazlı Dinamik) -->
+                <div id="headerNavLinks" class="flex items-center gap-2">
+                    <!-- JS Tarafından Doldurulacak -->
                 </div>
             </div>
         </header>
@@ -244,19 +232,51 @@
             document.getElementById("userRoleSpan").textContent = currentUser.role === 'admin' ? 'Yönetici' : 'Vardiya Ustası';
             document.getElementById("inputMaster").value = currentUser.name;
 
+            // Rol bazlı üst menü (header) ayarı:
+            // Adminler: Veri Girişi, Grafik & Analiz, Matris Raporu, Makineler
+            // Ustalar: Veri Girişi, Matris Raporu
+            const navContainer = document.getElementById("headerNavLinks");
+            let navHtml = `
+                <a href="index.html" class="bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md flex items-center gap-1.5">
+                    📝 Veri Girişi ✓
+                </a>
+            `;
+
             if (currentUser.role === 'admin') {
-                document.getElementById("navVeriGiris").classList.remove("hidden");
-                document.getElementById("navVeriGiris").classList.add("flex");
-                document.getElementById("navRaporlar").classList.remove("hidden");
-                document.getElementById("navMakineler").classList.remove("hidden");
-                document.getElementById("navDivider").classList.remove("hidden");
+                navHtml += `
+                    <a href="rapor.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                        📈 Grafik & Analiz
+                    </a>
+                `;
+            }
+
+            navHtml += `
+                <a href="matris.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    📊 Matris Raporu
+                </a>
+            `;
+
+            if (currentUser.role === 'admin') {
+                navHtml += `
+                    <a href="makineler.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                        🖥️ Makineler
+                    </a>
+                `;
+            }
+
+            navHtml += `
+                <div class="h-6 w-px bg-slate-700 mx-1"></div>
+                <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    🚪 Çıkış Yap
+                </button>
+            `;
+
+            navContainer.innerHTML = navHtml;
+
+            if (currentUser.role === 'admin') {
                 document.getElementById("tableHeaderTitle").innerHTML = `📋 Son 24 Saat İçindeki Tüm Fabrika Kayıtları (<span id="myLogCount">0</span>)`;
                 document.getElementById("thActionHeader").classList.remove("hidden");
             } else {
-                document.getElementById("navVeriGiris").classList.add("hidden");
-                document.getElementById("navRaporlar").classList.add("hidden");
-                document.getElementById("navMakineler").classList.add("hidden");
-                document.getElementById("navDivider").classList.add("hidden");
                 document.getElementById("tableHeaderTitle").innerHTML = `📋 Son Girdiğiniz Kayıtlar (<span id="myLogCount">0</span>)`;
                 document.getElementById("thActionHeader").classList.add("hidden");
             }
@@ -428,7 +448,7 @@
                         const currentMName = currentUser.name.toLowerCase();
 
                         const itemObj = {
-                            sheetRowIndex: idx + 2, // Google Sheets 2. satırdan başlar (1. satır başlık)
+                            sheetRowIndex: idx + 2,
                             dateStr: dateStr,
                             timeStr: timeStr,
                             shift: c[2] ? c[2].v : "-",
