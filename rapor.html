@@ -589,9 +589,13 @@
                 const machineName = `Fitil - ${i}`;
                 const mEntries = data.filter(d => d.machine === machineName);
 
-                let shiftA = getShiftValue(mEntries, "1. Vardiya");
-                let shiftB = getShiftValue(mEntries, "2. Vardiya");
-                let shiftC = getShiftValue(mEntries, "3. Vardiya");
+                let shiftAObj = getShiftObject(mEntries, "1. Vardiya");
+                let shiftBObj = getShiftObject(mEntries, "2. Vardiya");
+                let shiftCObj = getShiftObject(mEntries, "3. Vardiya");
+
+                let shiftA = shiftAObj ? shiftAObj.efficiency : null;
+                let shiftB = shiftBObj ? shiftBObj.efficiency : null;
+                let shiftC = shiftCObj ? shiftCObj.efficiency : null;
 
                 if (shiftA !== null) allShiftA.push(shiftA);
                 if (shiftB !== null) allShiftB.push(shiftB);
@@ -606,14 +610,19 @@
                     allDayAvgs.push(dayAvgVal);
                 }
 
+                // Sadece tek günlük görünümdeyse operatör isimlerini göster
+                let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftAObj.operators.join(", ")}</span>` : "";
+                let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftBObj.operators.join(", ")}</span>` : "";
+                let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftCObj.operators.join(", ")}</span>` : "";
+
                 const trDisplay = document.createElement("tr");
                 trDisplay.className = "hover:bg-slate-50 transition border-b border-gray-100";
                 trDisplay.innerHTML = `
-                    <td class="p-2 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
-                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}</td>
-                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}</td>
-                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}</td>
-                    <td class="p-2 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
+                    <td class="p-2.5 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
+                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}${opAStr}</td>
+                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}${opBStr}</td>
+                    <td class="p-2.5 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}${opCStr}</td>
+                    <td class="p-2.5 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
                 `;
                 displayBody.appendChild(trDisplay);
             }
@@ -636,9 +645,19 @@
             displayBody.appendChild(trSummary);
         }
 
-        function getShiftValue(entries, shiftKeyword) {
-            const match = entries.filter(e => e.shift.includes(shiftKeyword));
-            return match.length > 0 ? match[match.length - 1].efficiency : null;
+        function getShiftObject(entries, shiftKeyword) {
+            const matches = entries.filter(e => e.shift.includes(shiftKeyword));
+            if (matches.length === 0) return null;
+
+            // Son kaydı baz alıyoruz
+            const lastMatch = matches[matches.length - 1];
+            // Aynı vardiyada bu makineye bakan tüm benzersiz operatörleri topla
+            const operators = [...new Set(matches.map(m => m.operator))];
+
+            return {
+                efficiency: lastMatch.efficiency,
+                operators: operators
+            };
         }
 
         function formatValue(val) {
@@ -690,9 +709,13 @@
                 const machineName = `Fitil - ${i}`;
                 const mEntries = currentFilteredData.filter(d => d.machine === machineName);
 
-                let shiftA = getShiftValue(mEntries, "1. Vardiya");
-                let shiftB = getShiftValue(mEntries, "2. Vardiya");
-                let shiftC = getShiftValue(mEntries, "3. Vardiya");
+                let shiftAObj = getShiftObject(mEntries, "1. Vardiya");
+                let shiftBObj = getShiftObject(mEntries, "2. Vardiya");
+                let shiftCObj = getShiftObject(mEntries, "3. Vardiya");
+
+                let shiftA = shiftAObj ? shiftAObj.efficiency : null;
+                let shiftB = shiftBObj ? shiftBObj.efficiency : null;
+                let shiftC = shiftCObj ? shiftCObj.efficiency : null;
 
                 if (shiftA !== null) allShiftA.push(shiftA);
                 if (shiftB !== null) allShiftB.push(shiftB);
@@ -716,7 +739,6 @@
                 ]);
             }
 
-            // Excel'e de genel ortalama satırı ekleniyor
             const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
             const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
             const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
