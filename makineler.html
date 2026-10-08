@@ -271,7 +271,6 @@
                     masterText = lastEntry.master;
                     dateText = `${lastEntry.dateStr} (${lastEntry.timeStr})`;
 
-                    // Tüm vardiyalar seçilse bile ortalama yerine son girilen verinin randımanı gösteriliyor
                     effValue = lastEntry.efficiency;
                     effText = `%${effValue.toFixed(1)}`;
 
@@ -382,7 +381,7 @@
                         <td class="p-2.5 text-xs font-medium text-indigo-300">${r.master}</td>
                         <td class="p-2.5 text-xs text-slate-300">${r.operator}</td>
                         <td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeClass}">%${r.efficiency}</span></td>
-                        <td class="p-2.5 text-xs text-slate-400 max-w-[120px] truncate" title="${r.description}">${r.description}</td>
+                        <td class="p-2.5 text-xs text-slate-300 whitespace-normal break-words">${r.description}</td>
                     `;
                     tbody.appendChild(tr);
                 });
