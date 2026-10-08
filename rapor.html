@@ -3,63 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitil Randıman Raporlama & Analiz Paneli</title>
+    <title>Fitil Randıman Grafik & Analiz Paneli</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js Grafikler -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js DataLabels Eklentisi -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <!-- SheetJS Excel Kütüphanesi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { background-color: #f8fafc; }
-        
         .glass-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
-
-        /* YAZDIRMA (PDF) / WINDOW.PRINT İÇİN TEK SAYFAYA SIĞDIRMA STİLLERİ */
         @media print {
-            header, .no-print, #loadingOverlay {
-                display: none !important;
-            }
-
-            body {
-                background-color: #ffffff !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            @page {
-                size: A4 portrait;
-                margin: 5mm;
-            }
-
-            .print-target {
-                display: block !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 10px !important;
-                box-shadow: none !important;
-                border: none !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-
-            body.printing-single-card .glass-card:not(.print-target) {
-                display: none !important;
-            }
-
-            #matrixTable th, #matrixTable td {
-                padding: 4px 6px !important;
-                font-size: 10px !important;
-            }
+            header, .no-print, #loadingOverlay { display: none !important; }
+            body { background-color: #ffffff !important; padding: 0 !important; margin: 0 !important; }
+            @page { size: A4 portrait; margin: 10mm; }
+            .print-target { display: block !important; width: 100% !important; max-width: 100% !important; margin: auto !important; box-shadow: none !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; }
+            body.printing-single-card .glass-card:not(.print-target) { display: none !important; }
         }
     </style>
 </head>
@@ -69,15 +32,18 @@
     <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50 no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <span class="text-2xl">📊</span>
-                <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Randıman Raporlama & Analiz Paneli</h1>
+                <span class="text-2xl">📈</span>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight">Fitil Grafik & Analiz Paneli</h1>
             </div>
             <div class="flex items-center gap-2">
                 <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
                     📝 Veri Girişi
                 </a>
                 <a href="rapor.html" class="bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md flex items-center gap-1.5">
-                    📊 Raporlar ✓
+                    📈 Grafik & Analiz ✓
+                </a>
+                <a href="matris.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
+                    📊 Matris Raporu
                 </a>
                 <a href="makineler.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg transition shadow-md">
                     🖥️ Makineler
@@ -145,14 +111,14 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 1: USTA & OPERATÖR PERFORMANSLARI -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- USTA KARTI -->
             <div id="cardMaster" class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                         👨‍🔧 Usta Bazlı Ort. Randıman (%)
                     </h3>
-                    <button onclick="printCard('cardMaster')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                    <button onclick="printCard('cardMaster')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -170,7 +136,7 @@
                         </h3>
                         <span class="text-[11px] text-gray-400 font-medium">(Yüksekten Düşüğe)</span>
                     </div>
-                    <button onclick="printCard('cardOperator')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                    <button onclick="printCard('cardOperator')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -183,14 +149,14 @@
         </div>
 
         <!-- GRAFİK BÖLÜMÜ 2: MAKİNE VE VARDİYA GRAFİKLERİ -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- MAKİNE KARTI -->
             <div id="cardMachine" class="glass-card p-6 rounded-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                         ⚡ Makine Ortalamaları (%)
                     </h3>
-                    <button onclick="printCard('cardMachine')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                    <button onclick="printCard('cardMachine')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
@@ -205,69 +171,13 @@
                     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                         🕒 Vardiya Ortalamaları (%)
                     </h3>
-                    <button onclick="printCard('cardShift')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                    <button onclick="printCard('cardShift')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 no-print">
                         <span>📄 PDF / Yazdır</span>
                     </button>
                 </div>
                 <div class="h-64">
                     <canvas id="shiftChart"></canvas>
                 </div>
-            </div>
-        </div>
-
-        <!-- EKRANDA GÖRÜNEN KART VE İNDİRME BUTONLARI -->
-        <div id="cardMatrix" class="glass-card p-6 rounded-2xl">
-            <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-gray-200">
-                <div>
-                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">FİTİL MAKİNELERİ RANDIMAN RAPORU</h3>
-                    <p id="pdfDateTitle" class="text-xs font-bold text-indigo-600 mt-0.5"></p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 no-print">
-                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
-                        <span>📊 Excel İndir</span>
-                    </button>
-                    <button onclick="printCard('cardMatrix')" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-1.5">
-                        <span>📄 A4 PDF / Yazdır</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- PDF/EKRAN İÇİNDEKİ MİNİ KPI KARTLARI -->
-            <div class="grid grid-cols-4 gap-3 mb-4">
-                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase block">KAYIT (MAKİNE-VARDİYA)</span>
-                    <span id="pdfKpiCount" class="text-sm font-black text-slate-800">0</span>
-                </div>
-                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase block">GENEL ORT.</span>
-                    <span id="pdfKpiAvg" class="text-sm font-black text-indigo-600">%0</span>
-                </div>
-                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase block">EN YÜKSEK</span>
-                    <span id="pdfKpiMax" class="text-sm font-black text-emerald-600">%0</span>
-                </div>
-                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase block">EN DÜŞÜK</span>
-                    <span id="pdfKpiMin" class="text-sm font-black text-rose-600">%0</span>
-                </div>
-            </div>
-
-            <!-- TABLO -->
-            <div class="overflow-x-auto">
-                <table id="matrixTable" class="w-full text-center border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-800 text-white font-bold uppercase">
-                            <th class="p-2 border border-slate-700 w-1/5">FİTİL</th>
-                            <th class="p-2 border border-slate-700 w-1/5">A VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(08:00 - 16:00)</span></th>
-                            <th class="p-2 border border-slate-700 w-1/5">B VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(16:00 - 24:00)</span></th>
-                            <th class="p-2 border border-slate-700 w-1/5">C VARDİYASI <span class="font-normal text-[9px] text-slate-300 block">(00:00 - 08:00)</span></th>
-                            <th class="p-2 border border-slate-700 w-1/5 bg-slate-900">GÜNLÜK ORT.</th>
-                        </tr>
-                    </thead>
-                    <tbody id="displayMatrixBody" class="divide-y divide-gray-200 font-semibold text-xs">
-                        <!-- JS Doldurur -->
-                    </tbody>
-                </table>
             </div>
         </div>
 
@@ -282,7 +192,6 @@
     <script>
         const SPREADSHEET_ID = "16tz3byec8CEmoLvT7PJl_tK9rhnHxnl7uyyYEv_yGxI";
         let rawData = [];
-        let currentFilteredData = [];
         let isRangeMode = false;
 
         let masterChartInstance = null;
@@ -294,31 +203,16 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const savedUser = localStorage.getItem("fitil_active_user");
-            if (!savedUser) {
-                window.location.href = "index.html";
-                return;
-            }
+            if (!savedUser) { window.location.href = "index.html"; return; }
             const user = JSON.parse(savedUser);
-            if (user.role !== "admin") {
-                alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır.");
-                window.location.href = "index.html";
-                return;
-            }
+            if (user.role !== "admin") { alert("⛔ Bu sayfaya erişim yetkiniz bulunmamaktadır."); window.location.href = "index.html"; return; }
 
             setTodayDate();
             fetchGVizData();
         });
 
-        function handleLogout() {
-            localStorage.removeItem("fitil_active_user");
-            window.location.href = "index.html";
-        }
-
-        function setTodayDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById("startDate").value = today;
-            document.getElementById("endDate").value = today;
-        }
+        function handleLogout() { localStorage.removeItem("fitil_active_user"); window.location.href = "index.html"; }
+        function setTodayDate() { const today = new Date().toISOString().split('T')[0]; document.getElementById("startDate").value = today; document.getElementById("endDate").value = today; }
 
         function setFilterMode(mode) {
             isRangeMode = (mode === 'range');
@@ -341,15 +235,11 @@
             applyFilters();
         }
 
-        function resetToToday() {
-            setTodayDate();
-            setFilterMode('single');
-        }
+        function resetToToday() { setTodayDate(); setFilterMode('single'); }
 
         function fetchGVizData() {
             showLoading(true);
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-
             fetch(url)
                 .then(res => res.text())
                 .then(rep => {
@@ -371,13 +261,9 @@
                         if (typeof rawDate === 'string' && rawDate.includes("Date(")) {
                             const dateParts = rawDate.match(/\d+/g);
                             if (dateParts) {
-                                const year = dateParts[0];
-                                const month = String(parseInt(dateParts[1]) + 1).padStart(2, '0');
-                                const day = String(dateParts[2]).padStart(2, '0');
-                                rawDate = `${year}-${month}-${day}`;
+                                rawDate = `${dateParts[0]}-${String(parseInt(dateParts[1]) + 1).padStart(2, '0')}-${String(dateParts[2]).padStart(2, '0')}`;
                             }
                         }
-
                         rawData.push({
                             dateStr: String(rawDate).split('T')[0],
                             timeStr: c[1] ? c[1].v : "-",
@@ -391,84 +277,48 @@
                     }
                 });
             }
-
             applyFilters();
         }
 
         function applyFilters() {
             const startD = document.getElementById("startDate").value;
             const endD = document.getElementById("endDate").value;
+            let currentFilteredData = isRangeMode ? rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD) : rawData.filter(item => item.dateStr === startD);
 
-            if (isRangeMode) {
-                document.getElementById("pdfDateTitle").textContent = `Tarih Aralığı: ${startD} ~ ${endD}`;
-                currentFilteredData = rawData.filter(item => item.dateStr >= startD && item.dateStr <= endD);
-            } else {
-                document.getElementById("pdfDateTitle").textContent = `Rapor Tarihi: ${startD}`;
-                currentFilteredData = rawData.filter(item => item.dateStr === startD);
-            }
-
-            // Aynı makine ve vardiya için mükerrer kayıtları temizleyip tekilleştirilmiş temiz veri seti üretiyoruz
             const uniqueSlotsMap = {};
-            currentFilteredData.forEach(d => {
-                const slotKey = `${d.dateStr}_${d.machine}_${d.shift}`;
-                uniqueSlotsMap[slotKey] = d; // Son girilen kaydı tutar
-            });
+            currentFilteredData.forEach(d => { uniqueSlotsMap[`${d.dateStr}_${d.machine}_${d.shift}`] = d; });
             const dedupedData = Object.values(uniqueSlotsMap);
 
             renderKPIs(dedupedData);
             renderCharts(dedupedData);
-            renderMatrixTables(currentFilteredData); // Tablo kendi içinde vardiya nesnelerini son kayda göre ele alıyor
         }
 
         function renderKPIs(dedupedData) {
             const count = dedupedData.length;
             document.getElementById("kpiRecordCount").textContent = count;
-            document.getElementById("pdfKpiCount").textContent = count;
-
             if (count === 0) {
-                ["kpiAvgEfficiency", "kpiMaxEfficiency", "kpiMinEfficiency", "pdfKpiAvg", "pdfKpiMax", "pdfKpiMin"].forEach(id => {
-                    document.getElementById(id).textContent = "%0";
-                });
+                ["kpiAvgEfficiency", "kpiMaxEfficiency", "kpiMinEfficiency"].forEach(id => document.getElementById(id).textContent = "%0");
                 return;
             }
-
             const uniqueEffs = dedupedData.map(d => d.efficiency);
-            const avg = (uniqueEffs.reduce((a, b) => a + b, 0) / count).toFixed(1);
-            const max = Math.max(...uniqueEffs).toFixed(1);
-            const min = Math.min(...uniqueEffs).toFixed(1);
-
-            document.getElementById("kpiAvgEfficiency").textContent = `%${avg}`;
-            document.getElementById("kpiMaxEfficiency").textContent = `%${max}`;
-            document.getElementById("kpiMinEfficiency").textContent = `%${min}`;
-
-            document.getElementById("pdfKpiAvg").textContent = `%${avg}`;
-            document.getElementById("pdfKpiMax").textContent = `%${max}`;
-            document.getElementById("pdfKpiMin").textContent = `%${min}`;
+            document.getElementById("kpiAvgEfficiency").textContent = `%${(uniqueEffs.reduce((a, b) => a + b, 0) / count).toFixed(1)}`;
+            document.getElementById("kpiMaxEfficiency").textContent = `%${Math.max(...uniqueEffs).toFixed(1)}`;
+            document.getElementById("kpiMinEfficiency").textContent = `%${Math.min(...uniqueEffs).toFixed(1)}`;
         }
 
         function renderCharts(dedupedData) {
-            // Usta ve operatör ortalamaları da artık tekilleştirilmiş (aynı vardiya-makine için son kayıt) veri üzerinden hesaplanıyor
             const masterMap = getGroupedAveragesByShiftPerson(dedupedData, 'master');
             masterChartInstance = createBarChart('masterChart', masterChartInstance, Object.keys(masterMap), Object.values(masterMap), 'Usta Randımanı (%)', '#6366f1');
 
             const opMap = getGroupedAveragesByShiftPerson(dedupedData, 'operator');
             const sortedOperators = Object.keys(opMap).sort((a,b) => parseFloat(opMap[b]) - parseFloat(opMap[a]));
-            const sortedValues = sortedOperators.map(k => opMap[k]);
+            operatorChartInstance = createHorizontalBarChart('operatorChart', operatorChartInstance, sortedOperators, sortedOperators.map(k => opMap[k]), 'Operatör Randımanı (%)', '#10b981');
 
-            operatorChartInstance = createHorizontalBarChart('operatorChart', operatorChartInstance, sortedOperators, sortedValues, 'Operatör Randımanı (%)', '#10b981');
-
-            const mData = [];
-            const mLabels = [];
+            const mData = [], mLabels = [];
             for(let i=1; i<=16; i++){
-                const mName = `Fitil - ${i}`;
                 mLabels.push(`${i}`);
-                const match = dedupedData.filter(d => d.machine === mName);
-                if(match.length > 0) {
-                    const avg = match.reduce((a,b)=>a+b.efficiency,0)/match.length;
-                    mData.push(avg.toFixed(1));
-                } else {
-                    mData.push(0);
-                }
+                const match = dedupedData.filter(d => d.machine === `Fitil - ${i}`);
+                mData.push(match.length > 0 ? (match.reduce((a,b)=>a+b.efficiency,0)/match.length).toFixed(1) : 0);
             }
             machineChartInstance = createBarChart('machineChart', machineChartInstance, mLabels, mData, 'Makine Randımanı (%)', '#f59e0b');
 
@@ -477,301 +327,65 @@
         }
 
         function getGroupedAveragesByShiftPerson(dedupedData, key) {
-            const personMap = {};
-            const personCounts = {};
-
+            const personMap = {}, personCounts = {};
             dedupedData.forEach(d => {
                 const person = d[key] || 'Belirtilmemiş';
                 personMap[person] = (personMap[person] || 0) + d.efficiency;
                 personCounts[person] = (personCounts[person] || 0) + 1;
             });
-
             const finalResult = {};
-            Object.keys(personMap).forEach(p => {
-                finalResult[p] = (personMap[p] / personCounts[p]).toFixed(1);
-            });
-
+            Object.keys(personMap).forEach(p => { finalResult[p] = (personMap[p] / personCounts[p]).toFixed(1); });
             return finalResult;
         }
 
         function groupByAverage(data, key) {
-            const map = {};
-            const counts = {};
+            const map = {}, counts = {};
             data.forEach(d => {
                 const val = d[key] || 'Belirtilmemiş';
                 map[val] = (map[val] || 0) + d.efficiency;
                 counts[val] = (counts[val] || 0) + 1;
             });
             const result = {};
-            Object.keys(map).forEach(k => {
-                result[k] = (map[k] / counts[k]).toFixed(1);
-            });
+            Object.keys(map).forEach(k => { result[k] = (map[k] / counts[k]).toFixed(1); });
             return result;
         }
 
         function createBarChart(canvasId, instance, labels, data, label, color) {
             if (instance) instance.destroy();
-
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctx, {
+            return new Chart(document.getElementById(canvasId).getContext('2d'), {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        backgroundColor: color,
-                        borderRadius: 6
-                    }]
-                },
+                data: { labels: labels, datasets: [{ label: label, data: data, backgroundColor: color, borderRadius: 6 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: (val) => val > 0 ? `%${val}` : '',
-                            font: { weight: 'bold', size: 10 }
-                        }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, max: 100 }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', formatter: (val) => val > 0 ? `%${val}` : '', font: { weight: 'bold', size: 10 } } },
+                    scales: { y: { beginAtZero: true, max: 100 } }
                 }
             });
         }
 
         function createHorizontalBarChart(canvasId, instance, labels, data, label, color) {
             if (instance) instance.destroy();
-
-            const container = document.getElementById("operatorChartContainer");
-            const calcHeight = Math.max(280, labels.length * 32);
-            container.style.height = `${calcHeight}px`;
-
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctx, {
+            document.getElementById("operatorChartContainer").style.height = `${Math.max(280, labels.length * 32)}px`;
+            return new Chart(document.getElementById(canvasId).getContext('2d'), {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        backgroundColor: color,
-                        borderRadius: 4
-                    }]
-                },
+                data: { labels: labels, datasets: [{ label: label, data: data, backgroundColor: color, borderRadius: 4 }] },
                 options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'right',
-                            formatter: (val) => val > 0 ? `%${val}` : '',
-                            font: { weight: 'bold', size: 10 }
-                        }
-                    },
-                    scales: {
-                        x: { beginAtZero: true, max: 105 }
-                    }
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', formatter: (val) => val > 0 ? `%${val}` : '', font: { weight: 'bold', size: 10 } } },
+                    scales: { x: { beginAtZero: true, max: 105 } }
                 }
             });
-        }
-
-        function renderMatrixTables(data) {
-            const displayBody = document.getElementById("displayMatrixBody");
-            displayBody.innerHTML = "";
-
-            let allShiftA = [];
-            let allShiftB = [];
-            let allShiftC = [];
-            let allDayAvgs = [];
-
-            for (let i = 1; i <= 16; i++) {
-                const machineName = `Fitil - ${i}`;
-                const mEntries = data.filter(d => d.machine === machineName);
-
-                let shiftAObj = getShiftObject(mEntries, "1. Vardiya");
-                let shiftBObj = getShiftObject(mEntries, "2. Vardiya");
-                let shiftCObj = getShiftObject(mEntries, "3. Vardiya");
-
-                let shiftA = shiftAObj ? shiftAObj.efficiency : null;
-                let shiftB = shiftBObj ? shiftBObj.efficiency : null;
-                let shiftC = shiftCObj ? shiftCObj.efficiency : null;
-
-                if (shiftA !== null) allShiftA.push(shiftA);
-                if (shiftB !== null) allShiftB.push(shiftB);
-                if (shiftC !== null) allShiftC.push(shiftC);
-
-                const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
-                let dayAvgText = "-";
-                let dayAvgVal = 0;
-                if (validVals.length > 0) {
-                    dayAvgVal = validVals.reduce((a, b) => a + b, 0) / validVals.length;
-                    dayAvgText = `%${dayAvgVal.toFixed(1)}`;
-                    allDayAvgs.push(dayAvgVal);
-                }
-
-                let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[9px] text-slate-500 font-medium mt-0.5">${shiftAObj.operators.join(", ")}</span>` : "";
-                let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[9px] text-slate-500 font-medium mt-0.5">${shiftBObj.operators.join(", ")}</span>` : "";
-                let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[9px] text-slate-500 font-medium mt-0.5">${shiftCObj.operators.join(", ")}</span>` : "";
-
-                const trDisplay = document.createElement("tr");
-                trDisplay.className = "hover:bg-slate-50 transition border-b border-gray-100";
-                trDisplay.innerHTML = `
-                    <td class="p-2 font-bold bg-slate-100 text-slate-800 border-r border-gray-200">${i}</td>
-                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftA)}">${formatValue(shiftA)}${opAStr}</td>
-                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftB)}">${formatValue(shiftB)}${opBStr}</td>
-                    <td class="p-2 border-r border-gray-100 ${getTailwindBg(shiftC)}">${formatValue(shiftC)}${opCStr}</td>
-                    <td class="p-2 font-bold ${getTailwindBg(dayAvgVal, validVals.length === 0)}">${dayAvgText}</td>
-                `;
-                displayBody.appendChild(trDisplay);
-            }
-
-            const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
-            const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
-            const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
-            const totalGeneralAvg = allDayAvgs.length > 0 ? allDayAvgs.reduce((a,b)=>a+b,0)/allDayAvgs.length : null;
-
-            const trSummary = document.createElement("tr");
-            trSummary.className = "bg-slate-900 text-white font-black text-xs uppercase";
-            trSummary.innerHTML = `
-                <td class="p-2 border-r border-slate-700">GENEL ORT.</td>
-                <td class="p-2 border-r border-slate-700">${avgA !== null ? `%${avgA.toFixed(1)}` : '-'}</td>
-                <td class="p-2 border-r border-slate-700">${avgB !== null ? `%${avgB.toFixed(1)}` : '-'}</td>
-                <td class="p-2 border-r border-slate-700">${avgC !== null ? `%${avgC.toFixed(1)}` : '-'}</td>
-                <td class="p-2 bg-indigo-900 text-indigo-200">${totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : '-'}</td>
-            `;
-            displayBody.appendChild(trSummary);
-        }
-
-        function getShiftObject(entries, shiftKeyword) {
-            const matches = entries.filter(e => e.shift.includes(shiftKeyword));
-            if (matches.length === 0) return null;
-
-            const lastMatch = matches[matches.length - 1];
-            const operators = [...new Set(matches.map(m => m.operator))];
-
-            return {
-                efficiency: lastMatch.efficiency,
-                operators: operators
-            };
-        }
-
-        function formatValue(val) {
-            return val !== null ? `%${val.toFixed(1)}` : "-";
-        }
-
-        function getTailwindBg(val, isEmpty = false) {
-            if (val === null || isEmpty) return "text-gray-400 font-normal";
-            if (val >= 70) return "bg-emerald-100 text-emerald-800 font-bold";
-            if (val >= 60) return "bg-amber-100 text-amber-800 font-bold";
-            return "bg-rose-100 text-rose-800 font-bold";
         }
 
         function printCard(cardId) {
             document.body.classList.add("printing-single-card");
             const target = document.getElementById(cardId);
-            if (target) {
-                target.classList.add("print-target");
-            }
-
+            if (target) target.classList.add("print-target");
             window.print();
-
-            setTimeout(() => {
-                document.body.classList.remove("printing-single-card");
-                if (target) {
-                    target.classList.remove("print-target");
-                }
-            }, 500);
+            setTimeout(() => { document.body.classList.remove("printing-single-card"); if (target) target.classList.remove("print-target"); }, 500);
         }
 
-        function exportToExcel() {
-            const startD = document.getElementById("startDate").value;
-            const endD = document.getElementById("endDate").value;
-            let fileName = `Fitil_Randiman_Raporu_${startD}.xlsx`;
-
-            const excelData = [];
-            excelData.push(["FİTİL MAKİNELERİ RANDIMAN RAPORU"]);
-            excelData.push([isRangeMode ? `Tarih Aralığı: ${startD} ~ ${endD}` : `Rapor Tarihi: ${startD}`]);
-            excelData.push([]);
-
-            excelData.push(["Fitil No", "A Vardiyası (08:00-16:00)", "B Vardiyası (16:00-24:00)", "C Vardiyası (00:00-08:00)", "Günlük Ortalaması"]);
-
-            let allShiftA = [];
-            let allShiftB = [];
-            let allShiftC = [];
-            let allDayAvgs = [];
-
-            for (let i = 1; i <= 16; i++) {
-                const machineName = `Fitil - ${i}`;
-                const mEntries = currentFilteredData.filter(d => d.machine === machineName);
-
-                let shiftAObj = getShiftObject(mEntries, "1. Vardiya");
-                let shiftBObj = getShiftObject(mEntries, "2. Vardiya");
-                let shiftCObj = getShiftObject(mEntries, "3. Vardiya");
-
-                let shiftA = shiftAObj ? shiftAObj.efficiency : null;
-                let shiftB = shiftBObj ? shiftBObj.efficiency : null;
-                let shiftC = shiftCObj ? shiftCObj.efficiency : null;
-
-                if (shiftA !== null) allShiftA.push(shiftA);
-                if (shiftB !== null) allShiftB.push(shiftB);
-                if (shiftC !== null) allShiftC.push(shiftC);
-
-                const validVals = [shiftA, shiftB, shiftC].filter(v => v !== null);
-                let dayAvgVal = 0;
-                let dayAvgText = "-";
-                if (validVals.length > 0) {
-                    dayAvgVal = validVals.reduce((a, b) => a + b, 0) / validVals.length;
-                    dayAvgText = `%${dayAvgVal.toFixed(1)}`;
-                    allDayAvgs.push(dayAvgVal);
-                }
-
-                excelData.push([
-                    `Fitil - ${i}`,
-                    shiftA !== null ? `%${shiftA.toFixed(1)}` : "-",
-                    shiftB !== null ? `%${shiftB.toFixed(1)}` : "-",
-                    shiftC !== null ? `%${shiftC.toFixed(1)}` : "-",
-                    dayAvgText
-                ]);
-            }
-
-            const avgA = allShiftA.length > 0 ? allShiftA.reduce((a,b)=>a+b,0)/allShiftA.length : null;
-            const avgB = allShiftB.length > 0 ? allShiftB.reduce((a,b)=>a+b,0)/allShiftB.length : null;
-            const avgC = allShiftC.length > 0 ? allShiftC.reduce((a,b)=>a+b,0)/allShiftC.length : null;
-            const totalGeneralAvg = allDayAvgs.length > 0 ? allDayAvgs.reduce((a,b)=>a+b,0)/allDayAvgs.length : null;
-
-            excelData.push([
-                "GENEL ORT.",
-                avgA !== null ? `%${avgA.toFixed(1)}` : "-",
-                avgB !== null ? `%${avgB.toFixed(1)}` : "-",
-                avgC !== null ? `%${avgC.toFixed(1)}` : "-",
-                totalGeneralAvg !== null ? `%${totalGeneralAvg.toFixed(1)}` : "-"
-            ]);
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-            ws['!cols'] = [
-                { wch: 15 },
-                { wch: 25 },
-                { wch: 25 },
-                { wch: 25 },
-                { wch: 20 }
-            ];
-
-            XLSX.utils.book_append_sheet(wb, ws, "Randıman Raporu");
-            XLSX.writeFile(wb, fileName);
-        }
-
-        function showLoading(show) {
-            document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
-        }
+        function showLoading(show) { document.getElementById("loadingOverlay").style.display = show ? "flex" : "none"; }
     </script>
 </body>
 </html>
