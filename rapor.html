@@ -404,11 +404,10 @@
         }
 
         function renderKPIs(data) {
-            // Aynı makine ve vardiya için birden fazla kayıt varsa, son girileni baz alarak benzersiz (Makine + Vardiya) slot sayısını hesapla
             const uniqueSlotsMap = {};
             data.forEach(d => {
                 const slotKey = `${d.dateStr}_${d.machine}_${d.shift}`;
-                uniqueSlotsMap[slotKey] = d.efficiency; // Son gelen üzerine yazarak tekilleştirir
+                uniqueSlotsMap[slotKey] = d.efficiency;
             });
 
             const uniqueEffs = Object.values(uniqueSlotsMap);
@@ -554,9 +553,7 @@
 
             const ctx = document.getElementById(canvasId).getContext('2d');
             return new Chart(ctx, {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
@@ -620,9 +617,10 @@
                     allDayAvgs.push(dayAvgVal);
                 }
 
-                let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftAObj.operators.join(", ")}</span>` : "";
-                let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftBObj.operators.join(", ")}</span>` : "";
-                let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-normal mt-0.5">👷 ${shiftCObj.operators.join(", ")}</span>` : "";
+                // Emoji kaldırıldı ve daha sade hale getirildi
+                let opAStr = (!isRangeMode && shiftAObj && shiftAObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-medium mt-0.5">${shiftAObj.operators.join(", ")}</span>` : "";
+                let opBStr = (!isRangeMode && shiftBObj && shiftBObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-medium mt-0.5">${shiftBObj.operators.join(", ")}</span>` : "";
+                let opCStr = (!isRangeMode && shiftCObj && shiftCObj.operators.length > 0) ? `<span class="block text-[10px] text-slate-500 font-medium mt-0.5">${shiftCObj.operators.join(", ")}</span>` : "";
 
                 const trDisplay = document.createElement("tr");
                 trDisplay.className = "hover:bg-slate-50 transition border-b border-gray-100";
