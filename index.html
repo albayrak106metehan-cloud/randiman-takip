@@ -116,7 +116,111 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 mb-1">Operatör</label>
-                            <input type="text" id="inputOperator" placeholder="Operatör Adı Soyadı" required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <!-- Yazılabilir ve Filtrelenebilir (Autocomplete) Alan -->
+                            <input type="text" id="inputOperator" list="operatorList" placeholder="Operatör adı yazın veya seçin..." required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <datalist id="operatorList">
+                                <option value="Hüseyin Özkaya">
+                                <option value="Ali Mehmet Coşkun">
+                                <option value="Hacı Kıvrak">
+                                <option value="Yunus Ekin">
+                                <option value="İrfan Ölmez">
+                                <option value="Ahmet Çelik">
+                                <option value="Görkhan Uçan">
+                                <option value="Hamza Hüseyin">
+                                <option value="Muhammed Zeyni">
+                                <option value="Mustafa Doğan">
+                                <option value="Barış Aktaş">
+                                <option value="Niyazi Sakallı">
+                                <option value="Mustafa Akcalar">
+                                <option value="Yusuf Korkmaz">
+                                <option value="Sergen Uçan">
+                                <option value="Şadi Selmu">
+                                <option value="Mustafa Baki Sezer">
+                                <option value="Yusuf Ablak">
+                                <option value="Halil Çoban">
+                                <option value="Mehmet Emin Demir">
+                                <option value="Kasım Kozak">
+                                <option value="Mahir İbrahim">
+                                <option value="İdris Şeyhmuhammed">
+                                <option value="Yasir Ammure">
+                                <option value="Gencay Üregil">
+                                <option value="Adem Ölmez">
+                                <option value="Mesut Seviş">
+                                <option value="Yılmaz Umutcan Bayraktar">
+                                <option value="İsmail Küçükoğlu">
+                                <option value="Bekir Güvendik">
+                                <option value="Cumallı Durmuşoğlu">
+                                <option value="Tolgahan Çömez">
+                                <option value="Sefer Elma">
+                                <option value="Mustafa Kemal Karaca">
+                                <option value="Ferhat Kılıç">
+                                <option value="Diya Meriy">
+                                <option value="Mahmud Muhammed">
+                                <option value="Nihat Can">
+                                <option value="Ali Demirel">
+                                <option value="Duran Yaşar">
+                                <option value="Veli Demir">
+                                <option value="Yusuf Deveci">
+                                <option value="Bilal Çuheda">
+                                <option value="Kenan Türküliç">
+                                <option value="Hatim Elsöyryme">
+                                <option value="İsmail Ademoğlu">
+                                <option value="Fatih Omay">
+                                <option value="Salih Eksen">
+                                <option value="Musa Bebek">
+                                <option value="Nur El İbrahim">
+                                <option value="Cemil Yılmaz">
+                                <option value="Abdülhalim Meriy">
+                                <option value="Osman Yıldız">
+                                <option value="Aykut Mintaş">
+                                <option value="Ufuk Ceylan">
+                                <option value="Şakir Değirmenci">
+                                <option value="Hüseyin Kasım">
+                                <option value="Kasım Güleç">
+                                <option value="Ahmet Çite">
+                                <option value="Hüseyin Boran">
+                                <option value="Suat Eken">
+                                <option value="Ferdi Özdemir">
+                                <option value="Enes Dündar">
+                                <option value="Gürhan Akbaşlı">
+                                <option value="Hüseyin Çevik">
+                                <option value="Mücahit Karabulut">
+                                <option value="Ümit Kaya">
+                                <option value="Sefa Gürgan">
+                                <option value="Mustafa Tepegöz">
+                                <option value="Abdulvahap İsmail">
+                                <option value="Abdourrahman Kurcum">
+                                <option value="Ezeddin Hüseyin">
+                                <option value="İsmail Sado">
+                                <option value="Murşid Cuni">
+                                <option value="Abdullah Dair">
+                                <option value="Cavit Alperen Elmas">
+                                <option value="Muhammed Cüheda">
+                                <option value="Erhan Gönen">
+                                <option value="Cumali Çam">
+                                <option value="Yusuf Ölmez">
+                                <option value="Sinan Saygılı">
+                                <option value="Ramazan Taydemir">
+                                <option value="Halit Kassap">
+                                <option value="Yakup Gülmez">
+                                <option value="Necip Elali">
+                                <option value="Ergün Gergus">
+                                <option value="Selman Güzhan">
+                                <option value="Ferdi Özaslan">
+                                <option value="Caner Aslan">
+                                <option value="Muhammed Eşşüiri">
+                                <option value="Selim Konuk">
+                                <option value="Ramazan Konuk">
+                                <option value="Serdar Karlıdağ">
+                                <option value="Bayram Doğan">
+                                <option value="Arif Doğan">
+                                <option value="Mehmet Ümit Can">
+                                <option value="Günay Ayyıldız">
+                                <option value="Nedim İsmail">
+                                <option value="Fahri Yılmaz">
+                                <option value="Uğur Cançelik">
+                                <option value="Murat Akkaya">
+                            </datalist>
                         </div>
                     </div>
 
@@ -232,9 +336,6 @@
             document.getElementById("userRoleSpan").textContent = currentUser.role === 'admin' ? 'Yönetici' : 'Vardiya Ustası';
             document.getElementById("inputMaster").value = currentUser.name;
 
-            // Rol bazlı üst menü (header) ayarı:
-            // Adminler: Veri Girişi, Grafik & Analiz, Matris Raporu, Makineler
-            // Ustalar: Veri Girişi, Matris Raporu
             const navContainer = document.getElementById("headerNavLinks");
             let navHtml = `
                 <a href="index.html" class="bg-indigo-600 text-white border-2 border-indigo-400 text-xs md:text-sm font-bold px-3.5 py-2 rounded-lg shadow-md flex items-center gap-1.5">
