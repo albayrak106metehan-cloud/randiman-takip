@@ -116,7 +116,6 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 mb-1">Operatör</label>
-                            <!-- Yazılabilir ve Filtrelenebilir (Autocomplete) Alan -->
                             <input type="text" id="inputOperator" list="operatorList" placeholder="Operatör adı yazın veya seçin..." required class="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <datalist id="operatorList">
                                 <option value="Hüseyin Özkaya">
@@ -181,7 +180,7 @@
                                 <option value="Hüseyin Boran">
                                 <option value="Suat Eken">
                                 <option value="Ferdi Özdemir">
-                                <option value="Enes Dündar">
+                                <option value="Enes Dündار">
                                 <option value="Gürhan Akbaşlı">
                                 <option value="Hüseyin Çevik">
                                 <option value="Mücahit Karabulut">
@@ -383,6 +382,7 @@
             }
 
             setInitialDateTime();
+            loadLastSelections(); // Hafızadaki son vardiya ve makineyi forma yükle
             fetchUserLogs();
         }
 
@@ -421,10 +421,39 @@
             }
         }
 
+        // Son seçimleri tarayıcıya kaydet
+        function saveLastSelections(shift, machine) {
+            if (currentUser) {
+                localStorage.setItem(`last_shift_${currentUser.username}`, shift);
+                localStorage.setItem(`last_machine_${currentUser.username}`, machine);
+            }
+        }
+
+        // Kaydedilen son seçimleri form açıldığında veya sıfırlandığında yükle
+        function loadLastSelections() {
+            if (!currentUser) return;
+            const lastShift = localStorage.getItem(`last_shift_${currentUser.username}`);
+            const lastMachine = localStorage.getItem(`last_machine_${currentUser.username}`);
+
+            if (lastShift) {
+                document.getElementById("selectShift").value = lastShift;
+                checkShiftDateAdjustment();
+            }
+            if (lastMachine) {
+                document.getElementById("selectMachine").value = lastMachine;
+            }
+        }
+
         function handleFormSubmit(e) {
             e.preventDefault();
             const editIndex = document.getElementById("editRowIndex").value;
             const isEditing = editIndex !== "";
+
+            const selectedShift = document.getElementById("selectShift").value;
+            const selectedMachine = document.getElementById("selectMachine").value;
+
+            // Seçilen vardiya ve makineyi hafızaya kaydet
+            saveLastSelections(selectedShift, selectedMachine);
 
             showLoading(true, isEditing ? "Kayıt Güncelleniyor..." : "E-Tablo'ya Kaydediliyor...");
 
@@ -433,9 +462,9 @@
                 rowIndex: editIndex,
                 date: document.getElementById("inputDate").value,
                 time: document.getElementById("inputTime").value,
-                shift: document.getElementById("selectShift").value,
+                shift: selectedShift,
                 master: document.getElementById("inputMaster").value,
-                machine: document.getElementById("selectMachine").value,
+                machine: selectedMachine,
                 operator: document.getElementById("inputOperator").value,
                 efficiency: document.getElementById("inputEfficiency").value,
                 description: document.getElementById("inputDescription").value || "-",
@@ -491,6 +520,7 @@
             document.getElementById("entryForm").reset();
             document.getElementById("inputMaster").value = currentUser.name;
             setInitialDateTime();
+            loadLastSelections(); // Form sıfırlandığında son seçilen vardiya/makine tekrar geri gelsin
         }
 
         function showSuccessBanner(msg) {
