@@ -180,7 +180,7 @@
                                 <option value="Hüseyin Boran">
                                 <option value="Suat Eken">
                                 <option value="Ferdi Özdemir">
-                                <option value="Enes Dündار">
+                                <option value="Enes Dündar">
                                 <option value="Gürhan Akbaşlı">
                                 <option value="Hüseyin Çevik">
                                 <option value="Mücahit Karabulut">
@@ -382,7 +382,7 @@
             }
 
             setInitialDateTime();
-            loadLastSelections(); // Hafızadaki son vardiya ve makineyi forma yükle
+            loadLastSelections();
             fetchUserLogs();
         }
 
@@ -421,15 +421,27 @@
             }
         }
 
-        // Son seçimleri tarayıcıya kaydet
-        function saveLastSelections(shift, machine) {
-            if (currentUser) {
-                localStorage.setItem(`last_shift_${currentUser.username}`, shift);
-                localStorage.setItem(`last_machine_${currentUser.username}`, machine);
+        // Son seçilen vardiya ve bir sonraki makineyi hesaplayıp kaydet
+        function saveNextSelections(shift, currentMachine) {
+            if (!currentUser) return;
+            
+            localStorage.setItem(`last_shift_${currentUser.username}`, shift);
+
+            // "Fitil - X" formatından sayıyı ayıkla ve bir sonraki makineyi bul
+            let nextMachineVal = "Fitil - 1";
+            if (currentMachine && currentMachine.includes("Fitil - ")) {
+                let currentNum = parseInt(currentMachine.replace("Fitil - ", "")) || 1;
+                let nextNum = currentNum + 1;
+                if (nextNum > 16) {
+                    nextNum = 1; // 16 bittikten sonra tekrar 1'e dön
+                }
+                nextMachineVal = `Fitil - ${nextNum}`;
             }
+
+            localStorage.setItem(`last_machine_${currentUser.username}`, nextMachineVal);
         }
 
-        // Kaydedilen son seçimleri form açıldığında veya sıfırlandığında yükle
+        // Hafızadaki son vardiya ve sıradaki makineyi forma yükle
         function loadLastSelections() {
             if (!currentUser) return;
             const lastShift = localStorage.getItem(`last_shift_${currentUser.username}`);
@@ -452,8 +464,8 @@
             const selectedShift = document.getElementById("selectShift").value;
             const selectedMachine = document.getElementById("selectMachine").value;
 
-            // Seçilen vardiya ve makineyi hafızaya kaydet
-            saveLastSelections(selectedShift, selectedMachine);
+            // Kayıt başarılı olduğunda bir sonraki makineye geçişi hazırla
+            saveNextSelections(selectedShift, selectedMachine);
 
             showLoading(true, isEditing ? "Kayıt Güncelleniyor..." : "E-Tablo'ya Kaydediliyor...");
 
@@ -479,7 +491,7 @@
             })
             .then(() => {
                 showLoading(false);
-                showSuccessBanner(isEditing ? "Kayıt başarıyla güncellendi!" : "Veri başarıyla kaydedildi ve alt listeye eklendi!");
+                showSuccessBanner(isEditing ? "Kayıt başarıyla güncellendi!" : "Veri başarıyla kaydedildi, sonraki makine getirildi!");
 
                 cancelEditMode();
                 setTimeout(fetchUserLogs, 2500);
@@ -520,7 +532,7 @@
             document.getElementById("entryForm").reset();
             document.getElementById("inputMaster").value = currentUser.name;
             setInitialDateTime();
-            loadLastSelections(); // Form sıfırlandığında son seçilen vardiya/makine tekrar geri gelsin
+            loadLastSelections(); // Sıradaki otomatik makine ve vardiyayı yükle
         }
 
         function showSuccessBanner(msg) {
